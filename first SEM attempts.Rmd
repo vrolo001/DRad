@@ -1,0 +1,22 @@
+---
+title: "First SEM attempt at writing code"
+author: "Vania Rolon"
+date: "2023-01-10"
+output: html_document
+---
+
+The original raw data are saved on a password-protected .xlsx document. Data were cleaned on SPSS v.26 and a new .sav file called *DRad cleaned data* was created. To work with this file on R, data need to be imported using the haven package (or another package that can import .sav files). If the haven package has not been installed in R before, then the command install.packages("haven") must be run. Following this, the command library(haven) must be run every time R is opened or every time a new session is ran.
+
+Note that comments in chunks of code are done using the # sign. Lines with these at the beginning will not run. In the code below, the install.packages command will not run. If this commad is needed, delete the # and run the line. It is recommended to add the # again after installing the package the first time so as not to keep installing and reinstalling the package in future sessions. The library() command, on the other hand, is needed every time R is reopened.
+
+```{r}
+#install.packages("haven")
+library(haven)
+
+#import .sav data and assigning it to the object DRad. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
+DRad <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data.sav")
+
+#information about all variables (e.g., if they are string, aka character, or categorical, aka factors)
+str(DRad)
+```
+
