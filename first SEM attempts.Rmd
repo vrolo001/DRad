@@ -20,3 +20,8 @@ DRad <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned da
 str(DRad)
 ```
 
+
+```{r}
+2 + 2
+```
+
