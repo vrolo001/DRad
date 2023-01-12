@@ -37,7 +37,6 @@ drad$countNA <- rowSums(is.na(drad[, c(which(colnames(drad) == "SDO_D"):which(co
 table(drad$countNA) #111 cases where all 26 columns examined had NAs
 sum(is.na(drad$Nationality) & drad$countNA == 26) #92 cases where nationality AND all 26 columns are missing, need to make table by countNA and Nationality. The 92 cases where nationality and the columns are missing are dropouts
 
-
 NAtable <- table(drad$countNA, as.factor(drad$Nationality), useNA = "always")
 colnames(NAtable) <- c("Austrian", "Bosnian", "Finnish", "French", "German", "Hungarian", "Israeli", "Italian", " Jordanian", "Kosovan", "Polish", "Serbian", "Slovenian", "Turkish", "Georgian", "English", "Other", "NAs")
 names(dimnames(NAtable)) <- c("Total NAs", "Nationality")
@@ -45,3 +44,42 @@ NAtable
 
 write.table(NAtable, file = "table of NAs in final constructs by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
 ```
+
+## "Other" Nationality
+
+There were several cases under "Other" for Nationality. Georgian participants, unlike other samples, were not collected by Qualtrics, so the attrition rate for them was higher. However, partners also mentioned over recruiting participants and said they had checked for completion so that we had roughly n = 200. The code below was written too check whether these "Other" responses are from the Georgian partners.
+
+```{r}
+#Repeat NA table but using Residence
+
+NAtable_res <- table(drad$countNA, as.factor(drad$Residence), useNA = "always")
+colnames(NAtable_res) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", " Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK", "NAs")
+names(dimnames(NAtable_res)) <- c("Total NAs", "Residence")
+NAtable_res
+
+write.table(NAtable_res, file = "table of NAs in final constructs by residence.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+## Creating new data set with only complete responses
+
+```{r}
+drad_complete <- drad %>%
+  filter(countNA == 0)
+nrow(drad_complete) #this does track with the number of complete responses in both the Nationality and Residence tables
+
+library(readr)
+write_csv(drad_complete, "C:/Users/Vania/Desktop/DRad/data and code/DRad complete responses for SEM.csv")
+write_sav(drad_complete,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
+```
+
+# SEM for English participants
+
+271 participants completed all items necessary for the SEM. These were subsetted into a new object called dradEN
+
+```{r}
+dradEN <- drad %>%
+  filter(Nationality == 22) %>%
+  filter(countNA == 0)
+nrow(dradEN)
+```
+
