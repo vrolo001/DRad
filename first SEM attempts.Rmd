@@ -2,26 +2,46 @@
 title: "First SEM attempt at writing code"
 author: "Vania Rolon"
 date: "2023-01-10"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 The original raw data are saved on a password-protected .xlsx document. Data were cleaned on SPSS v.26 and a new .sav file called *DRad cleaned data* was created. To work with this file on R, data need to be imported using the haven package (or another package that can import .sav files). If the haven package has not been installed in R before, then the command install.packages("haven") must be run. Following this, the command library(haven) must be run every time R is opened or every time a new session is ran.
 
-Note that comments in chunks of code are done using the # sign. Lines with these at the beginning will not run. In the code below, the install.packages command will not run. If this commad is needed, delete the # and run the line. It is recommended to add the # again after installing the package the first time so as not to keep installing and reinstalling the package in future sessions. The library() command, on the other hand, is needed every time R is reopened.
+Note that comments in chunks of code are done using the # sign. Lines with these at the beginning will not run. In the code below, the install.packages command will not run. If this command is needed, delete the # and run the line. It is recommended to add the # again after installing the package the first time so as not to keep installing and reinstalling the package in future sessions. The library() command, on the other hand, is needed every time R is reopened.
 
 ```{r}
 #install.packages("haven")
 library(haven)
 
 #import .sav data and assigning it to the object DRad. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
-DRad <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data.sav")
-
-#information about all variables (e.g., if they are string, aka character, or categorical, aka factors)
-str(DRad)
+drad <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data.sav")
 ```
 
+# Missing data
+
+When it comes to items on scales, all participants should have completed all items. This seems to be the case for most participants, but the data set contains some dropout cases where participants seemed to have dropped out early on and consequently have missing data for most of the survey items (i.e., if Qualtrics was meant to deliver 1,000 participants, but some were dropped either because they decided not to participate anymore or some other reason, then Qualtrics likely would have found someone to take that participant's place, but that participant's response was still recorded and sent to us).
+
+These dropout responses would be irrelevant for analyses and need to be removed because most items are missing. However there is still a second kind of incomplete response; those where participants did complete most items but skipped a few. When aggregating items to get the final constructs, SPSS syntax was set to consider cases listwise. That is, if construct 1 was to be an aggregate of items 1 to 4, and a participant only completed the first 3 items, then their score on the final construct would be NA.
+
+As a result, it is possible to add the number of NAs on all final construct (e.g., SDO, collective self-esteem, etc.). Greater number of total NAs likely mean that the response in question is a dropout response. Smaller numbers of total NAs would suggest these are incomplete responses, of which we should not have many considering the arrangement with Qualtrics whereby they were supposed to provide complete responses. The code below sums the NAs on all columns of interest for the final model.
 
 ```{r}
-2 + 2
-```
+library(tidyverse)
+drad$countNA <- rowSums(is.na(drad[, c(which(colnames(drad) == "SDO_D"):which(colnames(drad) == "Alienation"), 
+                                       which(colnames(drad) == "PolAt_1"), which(colnames(drad) == "PolAt_2"),
+                                       which(colnames(drad) == "Deprivation_1"), which(colnames(drad) == "Deprivation_2"),
+                                       which(colnames(drad) == "UkrMigrant"), which(colnames(drad) == "RusMigrant"))]))
 
+table(drad$countNA) #111 cases where all 26 columns examined had NAs
+sum(is.na(drad$Nationality) & drad$countNA == 26) #92 cases where nationality AND all 26 columns are missing, need to make table by countNA and Nationality. The 92 cases where nationality and the columns are missing are dropouts
+
+
+NAtable <- table(drad$countNA, as.factor(drad$Nationality), useNA = "always")
+colnames(NAtable) <- c("Austrian", "Bosnian", "Finnish", "French", "German", "Hungarian", "Israeli", "Italian", " Jordanian", "Kosovan", "Polish", "Serbian", "Slovenian", "Turkish", "Georgian", "English", "Other", "NAs")
+names(dimnames(NAtable)) <- c("Total NAs", "Nationality")
+NAtable
+
+write.table(NAtable, file = "table of NAs in final constructs by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
