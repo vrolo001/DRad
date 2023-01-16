@@ -1,5 +1,5 @@
 ---
-title: "First SEM attempt at writing code"
+title: "Pre-analyses data wrangling"
 author: "Vania Rolon"
 date: "2023-01-10"
 output:
@@ -17,6 +17,7 @@ library(haven)
 
 #import .sav data and assigning it to the object DRad. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
 drad <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data.sav")
+nrow(drad)
 ```
 
 # Missing data
@@ -47,7 +48,7 @@ write.table(NAtable, file = "table of NAs in final constructs by country.txt", s
 
 ## "Other" Nationality
 
-There were several cases under "Other" for Nationality. Georgian participants, unlike other samples, were not collected by Qualtrics, so the attrition rate for them was higher. However, partners also mentioned over recruiting participants and said they had checked for completion so that we had roughly n = 200. The code below was written too check whether these "Other" responses are from the Georgian partners.
+There were several cases under "Other" for Nationality. Georgian participants, unlike other samples, were not collected by Qualtrics, so the attrition rate for them was higher. However, partners also mentioned over recruiting participants and said they had checked for completion so that we had roughly n = 200 completed responses. The code below was written to check whether these "Other" responses are from the Georgian partners.
 
 ```{r}
 #Repeat NA table but using Residence
@@ -60,26 +61,33 @@ NAtable_res
 write.table(NAtable_res, file = "table of NAs in final constructs by residence.txt", sep = ",", quote = FALSE, row.names = TRUE)
 ```
 
-## Creating new data set with only complete responses
+The "Other" participants seem to be spread out across countries when looking at the data by Residence. We do get 140 full responses for Georgia, and 51 where only one construct is missing. This does give close to 200 completed responses.
+
+Because there was no exclusion criteria that said participants had to be nationals, further analyses use Residence rather than Nationality. Responses were one or two constructs are missing were also kept, as they are still usefu for other exploratory and non-SEM analyses. Two datasets were thus created: a data set with 100% complete responses only, and one with mostly complete responses, defined as those were 2 or fewer constructs were missing (i.e., countNA =< 2)
+
+## Creating new data set with only complete responses, and one with partially complete (countNA =< 2)
 
 ```{r}
 drad_complete <- drad %>%
   filter(countNA == 0)
 nrow(drad_complete) #this does track with the number of complete responses in both the Nationality and Residence tables
 
+drad_partial <- drad %>%
+  filter(countNA <= 2)
+nrow(drad_partial)
+
 library(readr)
-write_csv(drad_complete, "C:/Users/Vania/Desktop/DRad/data and code/DRad complete responses for SEM.csv")
+write_csv(drad_complete, "C:/Users/Vania/Desktop/DRad/data and code/DRad complete responses for SEM.csv") #keeps less detail than .sav
 write_sav(drad_complete,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
+
+write_sav(drad_partial,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially complete responses for SEM.sav")
 ```
 
-# SEM for English participants
-
-271 participants completed all items necessary for the SEM. These were subsetted into a new object called dradEN
+# Download complete and partially complete datasets for future R sessions
 
 ```{r}
-dradEN <- drad %>%
-  filter(Nationality == 22) %>%
-  filter(countNA == 0)
-nrow(dradEN)
-```
+#library(haven) #if the haven has not yet been downloaded for the new session
+drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
+drad_partial <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially complete responses for SEM.sav")
 
+```
