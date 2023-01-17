@@ -39,7 +39,7 @@ table(drad$countNA) #111 cases where all 26 columns examined had NAs
 sum(is.na(drad$Nationality) & drad$countNA == 26) #92 cases where nationality AND all 26 columns are missing, need to make table by countNA and Nationality. The 92 cases where nationality and the columns are missing are dropouts
 
 NAtable <- table(drad$countNA, as.factor(drad$Nationality), useNA = "always")
-colnames(NAtable) <- c("Austrian", "Bosnian", "Finnish", "French", "German", "Hungarian", "Israeli", "Italian", " Jordanian", "Kosovan", "Polish", "Serbian", "Slovenian", "Turkish", "Georgian", "English", "Other", "NAs")
+colnames(NAtable) <- c("Austrian", "Bosnian", "Finnish", "French", "German", "Hungarian", "Israeli", "Italian", "Jordanian", "Kosovan", "Polish", "Serbian", "Slovenian", "Turkish", "Georgian", "English", "Other", "NAs")
 names(dimnames(NAtable)) <- c("Total NAs", "Nationality")
 NAtable
 
@@ -54,7 +54,7 @@ There were several cases under "Other" for Nationality. Georgian participants, u
 #Repeat NA table but using Residence
 
 NAtable_res <- table(drad$countNA, as.factor(drad$Residence), useNA = "always")
-colnames(NAtable_res) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", " Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK", "NAs")
+colnames(NAtable_res) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK", "NAs")
 names(dimnames(NAtable_res)) <- c("Total NAs", "Residence")
 NAtable_res
 
