@@ -43,7 +43,7 @@ colnames(NAtable) <- c("Austrian", "Bosnian", "Finnish", "French", "German", "Hu
 names(dimnames(NAtable)) <- c("Total NAs", "Nationality")
 NAtable
 
-write.table(NAtable, file = "table of NAs in final constructs by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+#write.table(NAtable, file = "table of NAs in final constructs by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
 ```
 
 ## "Other" Nationality
@@ -58,7 +58,7 @@ colnames(NAtable_res) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", 
 names(dimnames(NAtable_res)) <- c("Total NAs", "Residence")
 NAtable_res
 
-write.table(NAtable_res, file = "table of NAs in final constructs by residence.txt", sep = ",", quote = FALSE, row.names = TRUE)
+#write.table(NAtable_res, file = "table of NAs in final constructs by residence.txt", sep = ",", quote = FALSE, row.names = TRUE)
 ```
 
 The "Other" participants seem to be spread out across countries when looking at the data by Residence. We do get 140 full responses for Georgia, and 51 where only one construct is missing. This does give close to 200 completed responses.
@@ -77,10 +77,10 @@ drad_partial <- drad %>%
 nrow(drad_partial)
 
 library(readr)
-write_csv(drad_complete, "C:/Users/Vania/Desktop/DRad/data and code/DRad complete responses for SEM.csv") #keeps less detail than .sav
-write_sav(drad_complete,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
+#write_csv(drad_complete, "C:/Users/Vania/Desktop/DRad/data and code/DRad complete responses for SEM.csv") #keeps less detail than .sav
+#write_sav(drad_complete,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
 
-write_sav(drad_partial,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially complete responses for SEM.sav")
+#write_sav(drad_partial,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially complete responses for SEM.sav")
 ```
 
 # Download complete and partially complete datasets for future R sessions
