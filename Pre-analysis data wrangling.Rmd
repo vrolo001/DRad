@@ -90,3 +90,52 @@ write_sav(drad_partial,"C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially
 drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/complete responses for SEM.sav")
 drad_partial <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/partially complete responses for SEM.sav")
 ```
+
+# Comparing original data when recoding into same variables vs different variables (21/01/23)
+
+When starting to run the pre-registered model, the measurement model had poor fit. A look at CFAs for SDO and collective self-esteem showed poor loadings for some items. 
+
+Further moving to compute Cronbach's alphas for all scales resulted in an even greater puzzle: despite recoding the necessary items for all our scales on SPSS, R would give the warning "Warning: Some items were negatively correlated with the total scale and probably should be reversed." R would also pinpoint which items should be reversed. For example, when using the whole dataset, R stated that items 1, 3, 6, 7, 9, and 11 of the Authoritarianism-Conservatism scale were negatively correlated with the total scale and should be reversed. These items match the items that need to be reverse scored on the original scale. Thus, at first glance one would think SPSS did not reverse code items properly. However, all 1-7 scales that had reverse items were coded in the same chunk. These were items in the SDO, collective self-esteem, realistic and symbolic threat, anomie, authoritarianism-conservatism, and political trust scales. If SPSS did not recode the authoritarianism-conservatism items properly, the same should have been the case for items in the other scales, but R did not find negative correlations for these. 
+
+Stranger still, when using only the UK subset, which was extracted from the complete responses dataset, and computing alphas, R now mentioned that items 1, 3, 6, 7, 9, 11 of the authoritarianism-conservatism scale, items 3, 5, and 7 of symbolic threat, and items 1, 2, 3, 4, 5, 10, and 12 should be reversed. These items once again coincided with the items that need to be recoded (except for anomie where the items that R recommends recoding are the ones that shoult NOT be recoded according to the anomie scale).
+
+To figure if perhaps there were coding issues when cleaning data on SPSS and recoding variables into the same column, a new syntax file was created and the raw data were cleaned a second time but this time recoding variables into different columns. If the first syntax recoding variables into the same column did not have mistakes, then the final aggregated constructs in both cleaned datasets (and before removing incomplete responses) should be identical. We can compare these columns with R in the code below:
+
+```{r}
+library(haven)
+library(tidyverse)
+
+#import .sav data files
+drad_samecolumns <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data.sav")
+drad_diffcolumns <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/SPSS/DRad cleaned data, recodes saved into different variables.sav")
+nrow(drad_samecolumns)
+nrow(drad_diffcolumns)
+
+identical(drad_diffcolumns$SDO_D, drad_samecolumns$SDO_D)
+identical(drad_diffcolumns$SDO_E, drad_samecolumns$SDO_E)
+identical(drad_diffcolumns$SDO_T, drad_samecolumns$SDO_T)
+identical(drad_diffcolumns$SEsteem, drad_samecolumns$SEsteem)
+identical(drad_diffcolumns$Narcissism, drad_samecolumns$Narcissism)
+identical(drad_diffcolumns$RThreat, drad_samecolumns$RThreat)
+identical(drad_diffcolumns$SThreat, drad_samecolumns$SThreat)
+identical(drad_diffcolumns$Populism, drad_samecolumns$Populism)
+identical(drad_diffcolumns$Extremism, drad_samecolumns$Extremism)
+identical(drad_diffcolumns$Anomie_sfabric, drad_samecolumns$Anomie_sfabric)
+identical(drad_diffcolumns$Anomie_leader, drad_samecolumns$Anomie_leader)
+identical(drad_diffcolumns$Anomie, drad_samecolumns$Anomie)
+identical(drad_diffcolumns$OnlineGroupID, drad_samecolumns$OnlineGroupID)
+identical(drad_diffcolumns$Authoritarianism, drad_samecolumns$Authoritarianism)
+identical(drad_diffcolumns$Conservatism, drad_samecolumns$Conservatism)
+identical(drad_diffcolumns$Authoritarianism_Conservatism, drad_samecolumns$Authoritarianism_Conservatism)
+identical(drad_diffcolumns$PolTrust, drad_samecolumns$PolTrust)
+identical(drad_diffcolumns$Cohesion, drad_samecolumns$Cohesion)
+identical(drad_diffcolumns$RusAtt, drad_samecolumns$RusAtt)
+identical(drad_diffcolumns$Alienation, drad_samecolumns$Alienation)
+```
+
+We see that the final constructs are indeed identical across datasets, whether we use the set that recoded variables into the same columns, or the set that recoded variables into different columns. As such, we can move on using the more practical one: the one that recoded things into the same column, as this frees us from having to constantly remember to include _R items when building models that use single items (i.e, mainly SEMs). 
+
+This also means that, unless there was an error with the code when computing the alphas, the puzzling flaggings we saw are accurate, and the problem is not with the coding done to clean and analyse the data, but with the data itself. The final comparison to be done is to get the alphas with SPSS and see if it gives us the same warning that R did regarding negatively correlated items.
+
+
+
