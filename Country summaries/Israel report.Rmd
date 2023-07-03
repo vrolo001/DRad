@@ -1,0 +1,273 @@
+---
+title: "Israel report"
+author: "Vania Rolon"
+date: "2023-04-14"
+output: html_document
+---
+
+# Setting the workspace
+
+Until we get to the path model, any analyses conducted on one country will repeat on others countries. The code would thus be the same, and the only thing that changes is the dataset used. We could create several datasets called drad_countryname, but then this object would need to be changed across all the code when going from one country to another. A more practical option, is to assign a country's data to the same object (i.e., drad_country) and rerun the code. Each time a new country gets analysed, the only thing that needs to be changed is the *filter by Residence* command when defining drad_country.
+
+```{r}
+library(haven)
+library(tidyverse)
+library(lavaan)
+
+#import .sav data and assigning it to the object drad_complete. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
+drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/Last data cleaning/DRad FINAL completed responses 28-02-23.sav")
+nrow(drad_complete)
+any(drad_complete$countNA != 0)
+sum(drad_complete$countNA)
+
+drad_country <- drad_complete %>%
+  filter(Residence == 11) #Israel = 11
+
+nrow(drad_country)
+
+```
+
+# Membership to organisations
+
+Participants were asked to indicate if they were active (1), inactive(2), or not a member (3) of several organisations. In some countries, some participants had missing values. These will be considered where relevant (i.e., if a country did not have NAs then there will be no NA columns)
+
+```{r}
+drad_orgmemb <- drad_country %>%
+  dplyr::select(c(OrgMember_1:OrgMember_12_TEXT))
+
+sum(is.na(drad_orgmemb)) #no missing values
+
+org1 <- summary(c(as.factor(drad_orgmemb$OrgMember_1)))
+org2 <- summary(c(as.factor(drad_orgmemb$OrgMember_2)))
+org3 <-summary(c(as.factor(drad_orgmemb$OrgMember_3)))
+org4 <- summary(c(as.factor(drad_orgmemb$OrgMember_4)))
+org5 <- summary(c(as.factor(drad_orgmemb$OrgMember_5)))
+org6 <- summary(c(as.factor(drad_orgmemb$OrgMember_6)))
+org7 <- summary(c(as.factor(drad_orgmemb$OrgMember_7)))
+org8 <- summary(c(as.factor(drad_orgmemb$OrgMember_8)))
+org9 <- summary(c(as.factor(drad_orgmemb$OrgMember_9)))
+org10 <- summary(c(as.factor(drad_orgmemb$OrgMember_10)))
+org11 <- summary(c(as.factor(drad_orgmemb$OrgMember_11)))
+org12 <- summary(c(as.factor(drad_orgmemb$OrgMember_12)))
+
+org_count <- t(cbind(org1, org2, org3, org4, org5, org6, org7, org8, org9, org10, org11, org12))
+rownames(org_count) <- c("Church or religious organization ", "Sport or recreational organization", "Art, music or educational organization", "Labor union", "Political party", "Environmental organization", "Professional association", "Humanitarian or charitable organization", "Consumer organization", "Self-help group or mutual help group", "Women’s group", "Other organization ")
+
+org_count
+
+org_prop <- round(org_count/nrow(drad_orgmemb) * 100, 2) #for proportions
+
+org_table <- cbind(org_count[,1], org_prop[,1],
+      org_count[,2], org_prop[,2],
+      org_count[,3], org_prop[,3])
+colnames(org_table) <- c("n", "%", "n", "%", "n", "%") 
+org_table
+
+#write.table(org_table, file = "C:/Users/Vania/Desktop/DRad/data and code/R/DRad/tables/Israel org membership.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+```
+
+# Political actions in the last 12 months
+
+Participants were asked to report if they had engaged in certain political actions (1 = yes, 2 = no, 3 = don't know) in the last 12 months. In some countries, some participants had missing values. These will be considered where relevant (i.e., if a country did not have NAs then there will be no NA columns).
+
+```{r}
+drad_polact <- drad_country %>%
+  dplyr::select(c(PolAction_1:PolAction_8))
+
+sum(is.na(drad_polact)) #number of missing values
+
+pol1 <- summary(c(as.factor(drad_polact$PolAction_1)))
+pol2 <- summary(c(as.factor(drad_polact$PolAction_2)))
+pol3 <-summary(c(as.factor(drad_polact$PolAction_3)))
+pol4 <- summary(c(as.factor(drad_polact$PolAction_4)))
+pol5 <- summary(c(as.factor(drad_polact$PolAction_5)))
+pol6 <- summary(c(as.factor(drad_polact$PolAction_6)))
+pol7 <- summary(c(as.factor(drad_polact$PolAction_7)))
+pol8 <- summary(c(as.factor(drad_polact$PolAction_8)))
+
+
+polact_count <- t(cbind(pol1, pol2, pol3, pol4, pol5, pol6, pol7, pol8))
+rownames(polact_count) <- c("Contacted a politician or government official", "Worked in a political party or action group", "Worked in another ideological organization", "Displayed a campaign badge/sticker", "Signed a petition", "Took part in a lawful public demonstration", "Boycotted certain products", "Posted or shared anything about politics online")
+
+polact_count
+
+polact_prop <- round(polact_count/nrow(drad_polact) * 100, 2) #for proportions
+polact_prop
+
+polact_table <- cbind(polact_count[,1], polact_prop[,1],
+      polact_count[,2], polact_prop[,2],
+      polact_count[,3], polact_prop[,3])
+colnames(polact_table) <- c("n", "%", "n", "%", "n", "%") 
+polact_table #where the first two columns are for 1's (yes), the next two columns are 2's (no), there are NO 3's, and the last 2 columns are NAs
+
+#write.table(polact_table, file = "C:/Users/Vania/Desktop/DRad/data and code/R/DRad/tables/Israel political actions.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+# Exploratory descriptive findings
+
+On SPSS for speed. These include sex differences in all model variables; group differences in all model variables between people who reported experiencing discrimination and those who did not; correlations between model variables and age; predictors of negative attitudes towards Russia, and towards Russian and Ukrainian migrants
+
+For marginal p-values in t-tests or multiple regressions, analyses are ran here to obtain 95% bootstrapped CIs to further examine statistical significance
+
+## One-sample t-tests
+
+```{r}
+t.test(drad_country$RusMigrant, mu = 3)
+
+t.test(drad_country$UkrMigrant, mu = 3)
+```
+
+## Sex differences t-tests
+
+```{r}
+library(car)
+library(mosaic)
+
+#because the survey had 3 options for sex (male, female, other), the "other" participant(s) must be removed
+drad_sex <- drad_country %>%
+  filter(Sex !=3)
+nrow(drad_sex)
+
+```
+
+### Sex differences in political trust
+
+```{r}
+t.test(PolTrust ~ as.factor(Sex), data = drad_sex, 
+       var.equal = ifelse((leveneTest(PolTrust ~ as.factor(Sex), data = drad_sex))$`Pr(>F)`[1] > .05, TRUE, FALSE)) 
+
+set.seed(47)
+PolTrust.boot <- Boot(lm(PolTrust ~ Sex, data = drad_sex), f = coef, R = 5000)
+confint(PolTrust.boot, level = .95, type = "norm")
+
+favstats(PolTrust ~ as.factor(Sex), data = drad_sex)
+```
+
+### Sex differences in political attitudes
+
+This t-test needs to be computed last as we will need to remove 8's/NA responses for PolAt_1 to bootstrap CIs and properly test any p-values near the .05 criterion. We could create a new sex data frame (e.g., drad_sex_nopolat) but since we will not be using the drad_sex dataset anymore, it matters little if we "overwrite." The same applies in the next section when doing a PolAt_1 t-test for discriminated vs non-discriminated groups.
+
+```{r}
+library(naniar)
+nrow(drad_sex)
+drad_sex <- drad_sex %>%
+  replace_with_na(replace = list(PolAt_1 = 8))
+nrow(drad_sex)
+
+t.test(PolAt_1 ~ as.factor(Sex), data = drad_sex, var.equal = 
+        ifelse((leveneTest(PolAt_1 ~ as.factor(Sex), data = drad_sex))$`Pr(>F)`[1] > .05, TRUE, FALSE)
+       ) 
+#if t-test were to have a p-value close to the criterion that CIs were needed to assess statistical significance:
+#drad_sex <- drad_sex %>%
+#  select(PolAt_1, Sex)
+
+#set.seed(692)
+#PolAt_1.boot <- Boot(lm(PolAt_1 ~ Sex, data = na.omit(drad_sex)), f = coef, R = 5000)
+#confint(PolAt_1.boot, level = .95, type = "norm")
+
+#favstats(~ PolAt_1, Sex, data = drad_sex)
+```
+
+## Discriminated vs non discriminated t-tests
+
+```{r}
+drad_discrim <- drad_country %>%
+  filter(discrim_group != 3)
+```
+
+### in SDO_T
+
+```{r}
+t.test(SDO_T ~ as.factor(discrim_group), data = drad_discrim, 
+       var.equal = ifelse((leveneTest(SDO_T ~ as.factor(discrim_group), data = drad_discrim))$`Pr(>F)`[1] > .05, TRUE, FALSE)) 
+
+set.seed(1)
+SDO.boot <- Boot(lm(SDO_T ~ discrim_group, data = drad_discrim), f = coef, R = 5000)
+confint(SDO.boot, level = .95, type = "norm")
+
+favstats(SDO_T ~ as.factor(discrim_group), data = drad_discrim)
+
+```
+
+### in collective narcissism
+
+```{r}
+t.test(Narcissism ~ as.factor(discrim_group), data = drad_discrim, 
+       var.equal = ifelse((leveneTest(Narcissism ~ as.factor(discrim_group), data = drad_discrim))$`Pr(>F)`[1] > .05, TRUE, FALSE)) 
+
+set.seed(12)
+Narcissism.boot <- Boot(lm(Narcissism ~ discrim_group, data = drad_discrim), f = coef, R = 5000)
+confint(Narcissism.boot, level = .95, type = "norm")
+
+favstats(Narcissism ~ as.factor(discrim_group), data = drad_discrim)
+
+```
+
+### in social cohesion
+
+```{r}
+t.test(Cohesion ~ as.factor(discrim_group), data = drad_discrim, 
+       var.equal = ifelse((leveneTest(Cohesion ~ as.factor(discrim_group), data = drad_discrim))$`Pr(>F)`[1] > .05, TRUE, FALSE)) 
+
+set.seed(9355)
+Cohesion.boot <- Boot(lm(Cohesion ~ discrim_group, data = drad_discrim), f = coef, R = 5000)
+confint(Cohesion.boot, level = .95, type = "norm")
+
+```
+
+### in PolAt_1
+
+```{r}
+#library(naniar)
+nrow(drad_discrim)
+drad_discrim <- drad_discrim %>%
+  replace_with_na(replace = list(PolAt_1 = 8))
+nrow(drad_discrim)
+
+t.test(PolAt_1 ~ as.factor(discrim_group), data = drad_discrim, var.equal = 
+        ifelse((leveneTest(PolAt_1 ~ as.factor(discrim_group), data = drad_discrim))$`Pr(>F)`[1] > .05, TRUE, FALSE)
+       ) 
+#if t-test were to have a p-value close to the criterion that CIs were needed to assess statistical significance:
+#drad_discrim <- drad_discrim %>%
+# select(PolAt_1, discrim_group)
+
+#set.seed(149)
+#PolAt_1.boot <- Boot(lm(PolAt_1 ~ discrim_group, data = na.omit(drad_discrim)), f = coef, R = 5000)
+#confint(PolAt_1.boot, level = .95, type = "norm")
+
+#favstats(~ PolAt_1, discrim_group, data = drad_discrim)
+
+```
+
+## Predictors of attitudes against Russia 
+
+Given the coding error with PolAt_1, where participants were allowed to select a "don't know" option that was coded as 8, these responses need to be removed from the data or coded as NA, especially for the path models. For multiple regressions, cases can still be used pairwise, but bootstrapped CIs cannot be computed and 8's still need to be transformed to NAs
+
+Because these regressions are mainly exploratory, perhaps bootstrapped CIs with listwise deletion is not necessary. As such, we keep all cases for the time being and remove them only once we get to the path model
+
+```{r}
+library(naniar)
+nrow(drad_country)
+drad_country <- drad_country %>%
+  replace_with_na(replace = list(PolAt_1 = 8))
+nrow(drad_country) #n shouldn't change. We are only replacing 8's with NAs for pairwise analyses
+
+summary(lm(RusAtt ~ SDO_T + OnlineGroupID + PolAt_1 + Narcissism + Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism + PolTrust + RThreat + Extremism, data = drad_country))
+
+```
+
+## Predictors of views on Russian migrants
+
+```{r}
+summary(lm(RusMigrant ~ SDO_T + OnlineGroupID + PolAt_1 + Narcissism + Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism + PolTrust + RThreat + Extremism, data = drad_country))
+
+```
+
+## Predictors of views on Ukrainian migrants 
+
+```{r}
+summary(lm(UkrMigrant ~ SDO_T + OnlineGroupID + PolAt_1 + Narcissism + Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism + PolTrust + RThreat + Extremism, data = drad_country))
+
+```
+

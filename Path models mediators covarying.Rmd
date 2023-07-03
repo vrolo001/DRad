@@ -1,0 +1,4780 @@
+---
+title: "Same model for all countries"
+author: "Vania Rolon"
+date: "2023-06-02"
+output: html_document
+---
+
+# Setting the workspace
+
+Countries that can still have political attitudes in the path model are:
+- Austria
+- Israel
+- Italy
+- Kosovo
+- Turkey
+
+For those countries, use model_polat and filter out all participants where PolAt_1 = 8. For all other countries, use model_nopolat without filtering any participants 
+
+```{r}
+library(haven)
+library(tidyverse)
+library(lavaan)
+
+#import .sav data and assigning it to the object drad_complete. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
+drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/Last data cleaning/DRad FINAL completed responses 28-02-23.sav")
+nrow(drad_complete)
+any(drad_complete$countNA != 0)
+sum(drad_complete$countNA)
+
+#Model if political attitudes is included
+
+model_polat <- '
+#Regressions
+
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Covariances
+
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+
+#Model if political attitudes is NOT included
+
+model_nopolat <- '
+#Regressions
+
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Covariances
+
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+```
+
+## Models with model_polat and filtering PolAt_1 != 8
+
+```{r}
+############################## austria ##############################
+austria <- drad_complete %>%
+  filter(Residence == 4) %>% 
+  filter(PolAt_1 != 8)
+nrow(austria)  
+
+austria_fit1 <- sem(model_polat, data = austria, meanstructure = TRUE)
+#summary(austria_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table <- matrix(NA, nrow = 20, ncol = 8)
+colnames(fit_table) <- c("Country", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR")
+fit_table[1, ] <- c("austria", round(fitmeasures(austria_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(austria_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## israel ##############################
+israel <- drad_complete %>%
+  filter(Residence == 11) %>% 
+  filter(PolAt_1 != 8)
+nrow(israel)  
+
+israel_fit1 <- sem(model_polat, data = israel, meanstructure = TRUE)
+#summary(israel_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[2, ] <- c("israel", round(fitmeasures(israel_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(israel_fit1, sort. = TRUE) #SDO_T ~ Extremism
+
+############################## italy ##############################
+italy <- drad_complete %>%
+  filter(Residence == 12) %>% 
+  filter(PolAt_1 != 8)
+nrow(italy)  
+
+italy_fit1 <- sem(model_polat, data = italy, meanstructure = TRUE)
+#summary(italy_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[3, ] <- c("italy", round(fitmeasures(italy_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(italy_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## kosovo ##############################
+kosovo <- drad_complete %>%
+  filter(Residence == 14) %>% 
+  filter(PolAt_1 != 8)
+nrow(kosovo)  
+
+kosovo_fit1 <- sem(model_polat, data = kosovo, meanstructure = TRUE)
+#summary(kosovo_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[4, ] <- c("kosovo", round(fitmeasures(kosovo_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(kosovo_fit1, sort. = TRUE) # SDO_T ~ Extremism
+
+############################## turkey ##############################
+turkey <- drad_complete %>%
+  filter(Residence == 18) %>% 
+  filter(PolAt_1 != 8)
+nrow(turkey)  
+
+turkey_fit1 <- sem(model_polat, data = turkey, meanstructure = TRUE)
+#summary(turkey_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[5, ] <- c("turkey", round(fitmeasures(turkey_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(turkey_fit1, sort. = TRUE) #Extremism ~ SDO_T
+
+```
+
+## Models with model_nopolat and no filtering
+
+```{r}
+############################## bosnia & herzegovina ##############################
+bosnia <- drad_complete %>%
+  filter(Residence == 5)
+nrow(bosnia)  
+
+bosnia_fit1 <- sem(model_nopolat, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[6, ] <- c("bosnia", round(fitmeasures(bosnia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(bosnia_fit1, sort. = TRUE) #Extremism ~ SDO_T
+
+############################## finland ##############################
+finland <- drad_complete %>%
+  filter(Residence == 6)
+nrow(finland)  
+
+finland_fit1 <- sem(model_nopolat, data = finland, meanstructure = TRUE)
+#summary(finland_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[7, ] <- c("finland", round(fitmeasures(finland_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(finland_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## france ##############################
+france <- drad_complete %>%
+  filter(Residence == 7)
+nrow(france)  
+
+france_fit1 <- sem(model_nopolat, data = france, meanstructure = TRUE)
+#summary(france_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[8, ] <- c("france", round(fitmeasures(france_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(france_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## georgia ##############################
+georgia <- drad_complete %>%
+  filter(Residence == 8)
+nrow(georgia)  
+
+georgia_fit1 <- sem(model_nopolat, data = georgia, meanstructure = TRUE)
+#summary(georgia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[9, ] <- c("georgia", round(fitmeasures(georgia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(georgia_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## germany ##############################
+germany <- drad_complete %>%
+  filter(Residence == 9)
+nrow(germany)  
+
+germany_fit1 <- sem(model_nopolat, data = germany, meanstructure = TRUE)
+#summary(germany_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[10, ] <- c("germany", round(fitmeasures(germany_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(germany_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## hungary ##############################
+hungary <- drad_complete %>%
+  filter(Residence == 10)
+nrow(hungary)  
+
+hungary_fit1 <- sem(model_nopolat, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[11, ] <- c("hungary", round(fitmeasures(hungary_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(hungary_fit1, sort. = TRUE) # RThreat ~ SDO_T
+
+############################## jordan ##############################
+jordan <- drad_complete %>%
+  filter(Residence == 13)
+nrow(jordan)  
+
+jordan_fit1 <- sem(model_nopolat, data = jordan, meanstructure = TRUE)
+#summary(jordan_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[12, ] <- c("jordan", round(fitmeasures(jordan_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(jordan_fit1, sort. = TRUE) #Extremism ~ Narcissism
+
+############################## poland ##############################
+poland <- drad_complete %>%
+  filter(Residence == 15)
+nrow(poland)  
+
+poland_fit1 <- sem(model_nopolat, data = poland, meanstructure = TRUE)
+#summary(poland_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[13, ] <- c("poland", round(fitmeasures(poland_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(poland_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## serbia ##############################
+serbia <- drad_complete %>%
+  filter(Residence == 16)
+nrow(serbia)  
+
+serbia_fit1 <- sem(model_nopolat, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[14, ] <- c("serbia", round(fitmeasures(serbia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(serbia_fit1, sort. = TRUE) #Extremism ~ SDO_T
+
+############################## slovenia ##############################
+slovenia <- drad_complete %>%
+  filter(Residence == 17)
+nrow(slovenia)  
+
+slovenia_fit1 <- sem(model_nopolat, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[15, ] <- c("slovenia", round(fitmeasures(slovenia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(slovenia_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+############################## United Kingdom ##############################
+uk <- drad_complete %>%
+  filter(Residence == 19)
+nrow(uk)  
+
+uk_fit1 <- sem(model_nopolat, data = uk, meanstructure = TRUE)
+#summary(uk_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table[16, ] <- c("uk", round(fitmeasures(uk_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4))
+fit_table
+#modindices(uk_fit1, sort. = TRUE) #RThreat ~ SDO_T
+```
+
+For all countries, regardless of whether they kept political attitudes or not in their path models, the recommended modifications included either a path from SDO to RThreat, or a path from SDO to Extremism. It is still unclear if all models will be able to obtain good fit given the degrees of freedom left, however, it is worth seeing how many countries can fit this model, as adding covariances among mediators leads to a more standardised model for countries and ultimately a more parsimonous solution.
+
+# Models with political attitudes
+
+## Austria
+
+```{r}
+austria <- drad_complete %>%
+  filter(Residence == 4) %>% 
+  filter(PolAt_1 != 8)
+nrow(austria)
+
+austria_fit1 <- sem(model_polat, data = austria, meanstructure = TRUE)
+#summary(austria_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_austria <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_austria) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_austria[1, ] <- c("austria", round(fitmeasures(austria_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_austria
+
+#modindices(austria_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+austria_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths:
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+austria_fit2 <- sem(austria_path2, data = austria, meanstructure = TRUE)
+#summary(austria_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova2 <- anova(austria_fit2, austria_fit1)
+
+table_austria[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(austria_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova2$`Chisq diff`[2], austria_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+modindices(austria_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+austria_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+'
+
+austria_fit3 <- sem(austria_path3, data = austria, meanstructure = TRUE)
+#summary(austria_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova3 <- anova(austria_fit3, austria_fit2)
+
+table_austria[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(austria_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova3$`Chisq diff`[2], austria_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+modindices(austria_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_1
+
+```{r}
+austria_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+'
+
+austria_fit4 <- sem(austria_path4, data = austria, meanstructure = TRUE)
+#summary(austria_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova4 <- anova(austria_fit4, austria_fit3)
+
+table_austria[4, ] <- c("Extremism ~ Deprivation_1", round(fitmeasures(austria_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova4$`Chisq diff`[2], austria_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+modindices(austria_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ OnlineGroupID
+
+CFI and SRMR are already good. TLI is far away, but RMSEA is close. Worth seeing if we can improve it.
+
+```{r}
+austria_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1 + id8*OnlineGroupID
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+'
+
+austria_fit5 <- sem(austria_path5, data = austria, meanstructure = TRUE)
+#summary(austria_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova5 <- anova(austria_fit5, austria_fit4)
+
+table_austria[5, ] <- c("Extremism ~ OnlineGroupID", round(fitmeasures(austria_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova5$`Chisq diff`[2], austria_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+modindices(austria_fit5, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ Alienation
+
+```{r}
+austria_path6 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + al2*Alienation
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1 + id8*OnlineGroupID
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+#Extremism ~ OnlineGroupID
+#RThreat ~ Alienation
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+'
+
+austria_fit6 <- sem(austria_path6, data = austria, meanstructure = TRUE)
+#summary(austria_fit6, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova6 <- anova(austria_fit6, austria_fit5)
+
+table_austria[6, ] <- c("RThreat ~ Alienation", round(fitmeasures(austria_fit6, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova6$`Chisq diff`[2], austria_anova6$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+modindices(austria_fit6, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ PolAt_1
+
+```{r}
+austria_path7 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + al2*Alienation + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1 + id8*OnlineGroupID
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+#Extremism ~ OnlineGroupID
+#RThreat ~ Alienation
+#RThreat ~ PolAt_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+'
+
+austria_fit7 <- sem(austria_path7, data = austria, meanstructure = TRUE)
+#summary(austria_fit7, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+austria_anova7 <- anova(austria_fit7, austria_fit6)
+
+table_austria[7, ] <- c("RThreat ~ PolAt_1", round(fitmeasures(austria_fit7, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(austria_anova7$`Chisq diff`[2], austria_anova7$`Pr(>Chisq)`[2]), 4))
+
+table_austria
+
+```
+
+### Boostrapping the indirect effects
+
+```{r}
+austria_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + al2*Alienation + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1 + id8*OnlineGroupID
+
+#Added paths:
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+#Extremism ~ OnlineGroupID
+#RThreat ~ Alienation
+#RThreat ~ PolAt_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+POL_NARC_RT := p1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+POL_ANOM_RT := p2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+POL_DNAT_RT := p3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+POL_DIMM_RT := p4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+POL_COH := p5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+POL_ALN := p6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+POL_POP := p7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+POL_RT := p8*r1
+
+SDO_DNAT := sdo3*dep1_2
+ID_DNAT := id3*dep1_2
+POL_DNAT := p3*dep1_2
+
+SDO_ALN_RT := sdo6*al2*r1
+ID_ALN_RT := id6*al2*r1
+POL_ALN_RT := p6*al2*r1
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_DNAT + SDO_ALN_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_DNAT + ID_ALN_RT
+POL_IND := POL_NARC_RT + POL_ANOM_RT + POL_DNAT_RT + POL_DIMM_RT + POL_COH + POL_ALN + POL_POP + POL_RT + POL_DNAT + POL_ALN_RT
+
+#total TOTAL effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+ID_DIR := id8
+ID_TOT := ID_IND + ID_DIR
+
+'
+
+set.seed(56)
+austria_fitfinal <- sem(austria_pathfinal, data = austria, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(austria_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Israel
+
+```{r}
+israel <- drad_complete %>%
+  filter(Residence == 11) %>% 
+  filter(PolAt_1 != 8)
+nrow(israel)
+
+israel_fit1 <- sem(model_polat, data = israel, meanstructure = TRUE)
+#summary(israel_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_israel <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_israel) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_israel[1, ] <- c("israel", round(fitmeasures(israel_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_israel
+
+modindices(israel_fit1, sort. = TRUE) 
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+israel_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths:
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit2 <- sem(israel_path2, data = israel, meanstructure = TRUE)
+#summary(israel_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova2 <- anova(israel_fit2, israel_fit1)
+
+table_israel[2, ] <- c("Extremism ~ SDO_T", round(fitmeasures(israel_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova2$`Chisq diff`[2], israel_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+modindices(israel_fit2, sort. = TRUE)
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+israel_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit3 <- sem(israel_path3, data = israel, meanstructure = TRUE)
+#summary(israel_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova3 <- anova(israel_fit3, israel_fit2)
+
+table_israel[3, ] <- c("Extremism ~ Narcissism", round(fitmeasures(israel_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova3$`Chisq diff`[2], israel_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+modindices(israel_fit3, sort. = TRUE)
+```
+
+### Adding RThreat	~	SDO_T
+
+```{r}
+israel_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat	~	SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit4 <- sem(israel_path4, data = israel, meanstructure = TRUE)
+#summary(israel_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova4 <- anova(israel_fit4, israel_fit3)
+
+table_israel[4, ] <- c("RThreat ~ SDO_T", round(fitmeasures(israel_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova4$`Chisq diff`[2], israel_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+modindices(israel_fit4, sort. = TRUE)
+```
+
+### Adding RThreat ~ Alienation
+
+```{r}
+israel_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T + al2*Alienation
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat	~	SDO_T
+#RThreat ~ Alienation
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit5 <- sem(israel_path5, data = israel, meanstructure = TRUE)
+#summary(israel_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova5 <- anova(israel_fit5, israel_fit4)
+
+table_israel[5, ] <- c("RThreat ~ Alienation", round(fitmeasures(israel_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova5$`Chisq diff`[2], israel_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+modindices(israel_fit5, sort. = TRUE)
+```
+
+### Adding Extremism ~ OnlineGroupID
+
+```{r}
+israel_path6 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T + al2*Alienation
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism + id8*OnlineGroupID
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat	~	SDO_T
+#RThreat ~ Alienation
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit6 <- sem(israel_path6, data = israel, meanstructure = TRUE)
+#summary(israel_fit6, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova6 <- anova(israel_fit6, israel_fit5)
+
+table_israel[6, ] <- c("Extremism ~ OnlineGroupID", round(fitmeasures(israel_fit6, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova6$`Chisq diff`[2], israel_anova6$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+modindices(israel_fit6, sort. = TRUE)
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+israel_path7 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T + al2*Alienation
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism + id8*OnlineGroupID + dep2_2*Deprivation_2
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat	~	SDO_T
+#RThreat ~ Alienation
+#Extremism ~ OnlineGroupID
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+israel_fit7 <- sem(israel_path7, data = israel, meanstructure = TRUE)
+#summary(israel_fit7, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+israel_anova7 <- anova(israel_fit7, israel_fit6)
+
+table_israel[7, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(israel_fit7, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(israel_anova7$`Chisq diff`[2], israel_anova7$`Pr(>Chisq)`[2]), 4))
+
+table_israel
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+israel_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T + al2*Alienation
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism + id8*OnlineGroupID + dep2_2*Deprivation_2
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat	~	SDO_T
+#RThreat ~ Alienation
+#Extremism ~ OnlineGroupID
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+POL_NARC_RT := p1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+POL_ANOM_RT := p2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+POL_DNAT_RT := p3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+POL_DIMM_RT := p4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+POL_COH := p5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+POL_ALN := p6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+POL_POP := p7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+POL_NARC := p1*n2
+
+SDO_RT := sdo9*r1
+
+SDO_ALN_RT := sdo6*al2*r1
+ID_ALN_RT := id6*al2*r1
+POL_ALN_RT := p6*al2*r1
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+POL_DIMM := p4*dep2_2
+
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_NARC + SDO_RT + SDO_ALN_RT + SDO_DIMM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_ALN_RT + ID_DIMM
+POL_IND := POL_NARC_RT + POL_ANOM_RT + POL_DNAT_RT + POL_DIMM_RT + POL_COH + POL_ALN + POL_POP + POL_NARC + POL_ALN_RT + POL_DIMM
+
+#total TOTAL effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+ID_DIR := id8
+ID_TOT := ID_IND + ID_DIR
+
+'
+
+set.seed(977)
+israel_fitfinal <- sem(israel_pathfinal, data = israel, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(israel_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Italy
+
+```{r}
+italy <- drad_complete %>%
+  filter(Residence == 12) %>% 
+  filter(PolAt_1 != 8)
+nrow(italy)
+
+italy_fit1 <- sem(model_polat, data = italy, meanstructure = TRUE)
+#summary(italy_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_italy <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_italy) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_italy[1, ] <- c("italy", round(fitmeasures(italy_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_italy
+
+#modindices(italy_fit1, sort. = TRUE) #RThreat ~ SDO_T
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+italy_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths:
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+italy_fit2 <- sem(italy_path2, data = italy, meanstructure = TRUE)
+#summary(italy_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+italy_anova2 <- anova(italy_fit2, italy_fit1)
+
+table_italy[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(italy_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(italy_anova2$`Chisq diff`[2], italy_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_italy
+
+modindices(italy_fit2, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ PolAt_1
+
+```{r}
+italy_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths:
+#RThreat ~ SDO_T
+#RThreat ~ PolAt_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+italy_fit3 <- sem(italy_path3, data = italy, meanstructure = TRUE)
+#summary(italy_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+italy_anova3 <- anova(italy_fit3, italy_fit2)
+
+table_italy[3, ] <- c("RThreat ~ PolAt_1", round(fitmeasures(italy_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(italy_anova3$`Chisq diff`[2], italy_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_italy
+
+modindices(italy_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+italy_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths:
+#RThreat ~ SDO_T
+#RThreat ~ PolAt_1
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+italy_fit4 <- sem(italy_path4, data = italy, meanstructure = TRUE)
+#summary(italy_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+italy_anova4 <- anova(italy_fit4, italy_fit3)
+
+table_italy[4, ] <- c("Extremism ~ SDO_T", round(fitmeasures(italy_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(italy_anova4$`Chisq diff`[2], italy_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_italy
+
+modindices(italy_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+italy_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep2_2*Deprivation_2
+
+#Added paths:
+#RThreat ~ SDO_T
+#RThreat ~ PolAt_1
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+italy_fit5 <- sem(italy_path5, data = italy, meanstructure = TRUE)
+#summary(italy_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+italy_anova5 <- anova(italy_fit5, italy_fit4)
+
+table_italy[5, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(italy_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(italy_anova5$`Chisq diff`[2], italy_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_italy
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+italy_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + p8*PolAt_1
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep2_2*Deprivation_2
+
+#Added paths:
+#RThreat ~ SDO_T
+#RThreat ~ PolAt_1
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+POL_NARC_RT := p1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+POL_ANOM_RT := p2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+POL_DNAT_RT := p3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+POL_DIMM_RT := p4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+POL_COH := p5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+POL_ALN := p6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+POL_POP := p7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+POL_RT := p8*r1
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+POL_DIMM := p4*dep2_2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_DIMM 
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_DIMM
+POL_IND := POL_NARC_RT + POL_ANOM_RT + POL_DNAT_RT + POL_DIMM_RT + POL_COH + POL_ALN + POL_POP + POL_RT + POL_DIMM
+
+#total TOTAL effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(901)
+italy_fitfinal <- sem(italy_pathfinal, data = italy, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(italy_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Kosovo
+
+```{r}
+kosovo <- drad_complete %>%
+  filter(Residence == 14) %>% 
+  filter(PolAt_1 != 8)
+nrow(kosovo)
+
+kosovo_fit1 <- sem(model_polat, data = kosovo, meanstructure = TRUE)
+#summary(kosovo_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_kosovo <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_kosovo) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_kosovo[1, ] <- c("kosovo", round(fitmeasures(kosovo_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_kosovo
+
+#modindices(kosovo_fit1, sort. = TRUE) #Extremism ~ SDO_T
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+kosovo_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths:
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+kosovo_fit2 <- sem(kosovo_path2, data = kosovo, meanstructure = TRUE)
+#summary(kosovo_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+kosovo_anova2 <- anova(kosovo_fit2, kosovo_fit1)
+
+table_kosovo[2, ] <- c("Extremism ~ SDO_T", round(fitmeasures(kosovo_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(kosovo_anova2$`Chisq diff`[2], kosovo_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_kosovo
+
+modindices(kosovo_fit2, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ Cohesion
+
+```{r}
+kosovo_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + c2*Cohesion
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths:
+#Extremism ~ SDO_T
+#RThreat ~ Cohesion
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+kosovo_fit3 <- sem(kosovo_path3, data = kosovo, meanstructure = TRUE)
+#summary(kosovo_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+kosovo_anova3 <- anova(kosovo_fit3, kosovo_fit2)
+
+table_kosovo[3, ] <- c("RThreat ~ Cohesion", round(fitmeasures(kosovo_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(kosovo_anova3$`Chisq diff`[2], kosovo_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_kosovo
+
+modindices(kosovo_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ OnlineGroupID
+
+```{r}
+kosovo_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + c2*Cohesion
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + id8*OnlineGroupID
+
+#Added paths:
+#Extremism ~ SDO_T
+#RThreat ~ Cohesion
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+kosovo_fit4 <- sem(kosovo_path4, data = kosovo, meanstructure = TRUE)
+#summary(kosovo_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+kosovo_anova4 <- anova(kosovo_fit4, kosovo_fit3)
+
+table_kosovo[4, ] <- c("Extremism ~ OnlineGroupID", round(fitmeasures(kosovo_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(kosovo_anova4$`Chisq diff`[2], kosovo_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_kosovo
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+kosovo_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + c2*Cohesion
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + id8*OnlineGroupID
+
+#Added paths:
+#Extremism ~ SDO_T
+#RThreat ~ Cohesion
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+POL_NARC_RT := p1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+POL_ANOM_RT := p2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+POL_DNAT_RT := p3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+POL_DIMM_RT := p4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+POL_COH := p5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+POL_ALN := p6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+POL_POP := p7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_COH_RT := sdo5*c2*r1
+ID_COH_RT := id5*c2*r1
+POL_COH_RT := p5*c2*r1
+
+#total INDIRECT effects
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_COH_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_COH_RT
+POL_IND := POL_NARC_RT + POL_ANOM_RT + POL_DNAT_RT + POL_DIMM_RT + POL_COH + POL_ALN + POL_POP + POL_COH_RT
+
+#total TOTAL effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+ID_DIR := id8
+ID_TOT := ID_IND + ID_DIR
+
+'
+
+set.seed(212)
+kosovo_fitfinal <- sem(kosovo_pathfinal, data = kosovo, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(kosovo_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Turkey
+
+```{r}
+turkey <- drad_complete %>%
+  filter(Residence == 18) %>% 
+  filter(PolAt_1 != 8)
+nrow(turkey)
+
+turkey_fit1 <- sem(model_polat, data = turkey, meanstructure = TRUE)
+#summary(turkey_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_turkey <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_turkey) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_turkey[1, ] <- c("turkey", round(fitmeasures(turkey_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_turkey
+
+modindices(turkey_fit1, sort. = TRUE) 
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+turkey_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths:
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+turkey_fit2 <- sem(turkey_path2, data = turkey, meanstructure = TRUE)
+#summary(turkey_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+turkey_anova2 <- anova(turkey_fit2, turkey_fit1)
+
+table_turkey[2, ] <- c("Extremism ~ SDO_T", round(fitmeasures(turkey_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(turkey_anova2$`Chisq diff`[2], turkey_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_turkey
+
+modindices(turkey_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+turkey_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+turkey_fit3 <- sem(turkey_path3, data = turkey, meanstructure = TRUE)
+#summary(turkey_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+turkey_anova3 <- anova(turkey_fit3, turkey_fit2)
+
+table_turkey[3, ] <- c("Extremism ~ Narcissism", round(fitmeasures(turkey_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(turkey_anova3$`Chisq diff`[2], turkey_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_turkey
+
+modindices(turkey_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ OnlineGroupID
+
+```{r}
+turkey_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism + id8*OnlineGroupID
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+turkey_fit4 <- sem(turkey_path4, data = turkey, meanstructure = TRUE)
+#summary(turkey_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+turkey_anova4 <- anova(turkey_fit4, turkey_fit3)
+
+table_turkey[4, ] <- c("Extremism ~ OnlineGroupID", round(fitmeasures(turkey_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(turkey_anova4$`Chisq diff`[2], turkey_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_turkey
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+turkey_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + n2*Narcissism + id8*OnlineGroupID
+
+#Added paths:
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+POL_NARC_RT := p1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+POL_ANOM_RT := p2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+POL_DNAT_RT := p3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+POL_DIMM_RT := p4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+POL_COH := p5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+POL_ALN := p6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+POL_POP := p7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+POL_NARC := p1*n2
+
+#total INDIRECT effects
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_NARC
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC
+POL_IND := POL_NARC_RT + POL_ANOM_RT + POL_DNAT_RT + POL_DIMM_RT + POL_COH + POL_ALN + POL_POP + POL_NARC 
+
+#total TOTAL effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+ID_DIR := id8
+ID_TOT := ID_IND + ID_DIR
+
+'
+
+set.seed(934)
+turkey_fitfinal <- sem(turkey_pathfinal, data = turkey, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(turkey_fitfinal, boot.ci.type = "perc")
+
+```
+
+# Models without political attitudes
+
+## Bosnia & Herzegovina
+
+```{r}
+bosnia <- drad_complete %>%
+  filter(Residence == 5)
+nrow(bosnia)  
+
+bosnia_fit1 <- sem(model_nopolat, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_bosnia <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_bosnia) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_bosnia[1, ] <- c("bosnia", round(fitmeasures(bosnia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_bosnia
+
+#modindices(bosnia_fit1, sort. = TRUE) #Extremism ~ SDO_T
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+bosnia_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+bosnia_fit2 <- sem(bosnia_path2, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+bosnia_anova2 <- anova(bosnia_fit2, bosnia_fit1)
+
+table_bosnia[2, ] <- c("Extremism ~ SDO_T", round(fitmeasures(bosnia_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(bosnia_anova2$`Chisq diff`[2], bosnia_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_bosnia
+
+modindices(bosnia_fit2, sort. = TRUE)
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+bosnia_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2
+
+#Added paths
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+bosnia_fit3 <- sem(bosnia_path3, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+bosnia_anova3 <- anova(bosnia_fit3, bosnia_fit2)
+
+table_bosnia[3, ] <- c("Extremism ~ Deprivation_3", round(fitmeasures(bosnia_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(bosnia_anova3$`Chisq diff`[2], bosnia_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_bosnia
+
+modindices(bosnia_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+bosnia_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2 + n2*Narcissism
+
+#Added paths
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+bosnia_fit4 <- sem(bosnia_path4, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+bosnia_anova4 <- anova(bosnia_fit4, bosnia_fit3)
+
+table_bosnia[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(bosnia_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(bosnia_anova4$`Chisq diff`[2], bosnia_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_bosnia
+
+modindices(bosnia_fit4, sort. = TRUE) 
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+bosnia_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2 + n2*Narcissism
+
+#Added paths
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+#Extremism ~ Narcissism
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+bosnia_fit5 <- sem(bosnia_path5, data = bosnia, meanstructure = TRUE)
+#summary(bosnia_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+bosnia_anova5 <- anova(bosnia_fit5, bosnia_fit4)
+
+table_bosnia[5, ] <- c("RThreat ~ SDO_T", round(fitmeasures(bosnia_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(bosnia_anova5$`Chisq diff`[2], bosnia_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_bosnia
+```
+
+### Boostrapping indirect effects
+
+```{r}
+bosnia_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2 + n2*Narcissism
+
+#Added paths
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+#Extremism ~ Narcissism
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_RT := sdo9*r1
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_DIMM + SDO_NARC + SDO_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_DIMM + ID_NARC
+
+#total TOTAL effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(686)
+bosnia_fitfinal <- sem(bosnia_pathfinal, data = bosnia, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(bosnia_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Finland
+
+```{r}
+finland <- drad_complete %>%
+  filter(Residence == 6)
+nrow(finland)  
+
+finland_fit1 <- sem(model_nopolat, data = finland, meanstructure = TRUE)
+#summary(finland_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_finland <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_finland) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_finland[1, ] <- c("finland", round(fitmeasures(finland_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_finland
+
+modindices(finland_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+finland_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+finland_fit2 <- sem(finland_path2, data = finland, meanstructure = TRUE)
+#summary(finland_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+finland_anova2 <- anova(finland_fit2, finland_fit1)
+
+table_finland[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(finland_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(finland_anova2$`Chisq diff`[2], finland_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_finland
+
+modindices(finland_fit2, sort. = TRUE)
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+finland_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+finland_fit3 <- sem(finland_path3, data = finland, meanstructure = TRUE)
+#summary(finland_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+finland_anova3 <- anova(finland_fit3, finland_fit2)
+
+table_finland[3, ] <- c("RThreat ~ SDO_T", round(fitmeasures(finland_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(finland_anova3$`Chisq diff`[2], finland_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_finland
+
+modindices(finland_fit3, sort. = TRUE)
+```
+
+### Extremism ~ Deprivation_1
+
+```{r}
+finland_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+finland_fit4 <- sem(finland_path4, data = finland, meanstructure = TRUE)
+#summary(finland_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+finland_anova4 <- anova(finland_fit4, finland_fit3)
+
+table_finland[4, ] <- c("Extremism ~ Deprivation_1", round(fitmeasures(finland_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(finland_anova4$`Chisq diff`[2], finland_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_finland
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+finland_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + dep1_2*Deprivation_1
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_1
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_DNAT := sdo3*dep1_2
+ID_DNAT := id3*dep1_2
+
+SDO_RT := sdo8*r1
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_DNAT + SDO_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_DNAT 
+
+#total TOTAL effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(717)
+finland_fitfinal <- sem(finland_pathfinal, data = finland, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(finland_fitfinal, boot.ci.type = "perc")
+```
+
+## France
+
+```{r}
+france <- drad_complete %>%
+  filter(Residence == 7)
+nrow(france)  
+
+france_fit1 <- sem(model_nopolat, data = france, meanstructure = TRUE)
+#summary(france_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_france <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_france) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_france[1, ] <- c("france", round(fitmeasures(france_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_france
+
+modindices(france_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+france_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+france_fit2 <- sem(france_path2, data = france, meanstructure = TRUE)
+#summary(france_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+france_anova2 <- anova(france_fit2, france_fit1)
+
+table_france[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(france_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(france_anova2$`Chisq diff`[2], france_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_france
+
+modindices(france_fit2, sort. = TRUE)
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+france_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+france_fit3 <- sem(france_path3, data = france, meanstructure = TRUE)
+#summary(france_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+france_anova3 <- anova(france_fit3, france_fit2)
+
+table_france[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(france_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(france_anova3$`Chisq diff`[2], france_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_france
+
+modindices(france_fit3, sort. = TRUE)
+```
+
+### Adding RThreat ~ Populism
+
+```{r}
+france_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#RThreat ~ Populism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+france_fit4 <- sem(france_path4, data = france, meanstructure = TRUE)
+#summary(france_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+france_anova4 <- anova(france_fit4, france_fit3)
+
+table_france[4, ] <- c("RThreat ~ Populism", round(fitmeasures(france_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(france_anova4$`Chisq diff`[2], france_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_france
+
+modindices(france_fit4, sort. = TRUE)
+```
+
+### Adding Extremism ~ OnlineGroupID
+
+```{r}
+france_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + id8*OnlineGroupID
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#RThreat ~ Populism
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+france_fit5 <- sem(france_path5, data = france, meanstructure = TRUE)
+#summary(france_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+france_anova5 <- anova(france_fit5, france_fit4)
+
+table_france[5, ] <- c("Extremism ~ OnlineGroupID", round(fitmeasures(france_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(france_anova5$`Chisq diff`[2], france_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_france
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+france_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + id8*OnlineGroupID
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#RThreat ~ Populism
+#Extremism ~ OnlineGroupID
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+
+SDO_POP_RT := sdo7*pop2
+ID_POP_RT := id7*pop2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_POP_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_POP_RT
+
+#total TOTAL effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+ID_DIR:= id8
+ID_TOT := ID_IND + ID_DIR
+
+'
+
+set.seed(246)
+france_fitfinal <- sem(france_pathfinal, data = france, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(france_fitfinal, boot.ci.type = "perc")
+```
+
+## Georgia
+
+```{r}
+georgia <- drad_complete %>%
+  filter(Residence == 8)
+nrow(georgia)  
+
+georgia_fit1 <- sem(model_nopolat, data = georgia, meanstructure = TRUE)
+#summary(georgia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_georgia <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_georgia) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_georgia[1, ] <- c("georgia", round(fitmeasures(georgia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_georgia
+
+modindices(georgia_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+georgia_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+georgia_fit2 <- sem(georgia_path2, data = georgia, meanstructure = TRUE)
+#summary(georgia_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+georgia_anova2 <- anova(georgia_fit2, georgia_fit1)
+
+table_georgia[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(georgia_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(georgia_anova2$`Chisq diff`[2], georgia_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_georgia
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+georgia_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+
+SDO_RT := sdo8*r1
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP
+
+'
+
+set.seed(280)
+georgia_fitfinal <- sem(georgia_pathfinal, data = georgia, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(georgia_fitfinal, boot.ci.type = "perc")
+```
+
+## Germany
+
+```{r}
+germany <- drad_complete %>%
+  filter(Residence == 9)
+nrow(germany)  
+
+germany_fit1 <- sem(model_nopolat, data = germany, meanstructure = TRUE)
+#summary(germany_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_germany <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_germany) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_germany[1, ] <- c("germany", round(fitmeasures(germany_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_germany
+
+modindices(germany_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+germany_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+germany_fit2 <- sem(germany_path2, data = germany, meanstructure = TRUE)
+#summary(germany_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+germany_anova2 <- anova(germany_fit2, germany_fit1)
+
+table_germany[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(germany_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(germany_anova2$`Chisq diff`[2], germany_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_germany
+
+modindices(germany_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+germany_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+germany_fit3 <- sem(germany_path3, data = germany, meanstructure = TRUE)
+#summary(germany_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+germany_anova3 <- anova(germany_fit3, germany_fit2)
+
+table_germany[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(germany_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(germany_anova3$`Chisq diff`[2], germany_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_germany
+
+modindices(germany_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+germany_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+germany_fit4 <- sem(germany_path4, data = germany, meanstructure = TRUE)
+#summary(germany_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+germany_anova4 <- anova(germany_fit4, germany_fit3)
+
+table_germany[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(germany_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(germany_anova4$`Chisq diff`[2], germany_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_germany
+
+modindices(germany_fit4, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ Populism
+
+```{r}
+germany_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat ~ Populism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+germany_fit5 <- sem(germany_path5, data = germany, meanstructure = TRUE)
+#summary(germany_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+germany_anova5 <- anova(germany_fit5, germany_fit4)
+
+table_germany[5, ] <- c("RThreat ~ Populism", round(fitmeasures(germany_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(germany_anova5$`Chisq diff`[2], germany_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_germany
+
+```
+
+### Bootstrapping indirect effects
+
+```{r}
+germany_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#RThreat ~ Populism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_POP_RT := sdo7*pop2*r1
+ID_POP_RT := id7*pop2*r1
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_POP_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_POP_RT
+
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(48)
+germany_fitfinal <- sem(germany_pathfinal, data = germany, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(germany_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Hungary
+
+```{r}
+hungary <- drad_complete %>%
+  filter(Residence == 10)
+nrow(hungary)  
+
+hungary_fit1 <- sem(model_nopolat, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_hungary <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_hungary) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_hungary[1, ] <- c("hungary", round(fitmeasures(hungary_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_hungary
+
+modindices(hungary_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+hungary_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism 
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+hungary_fit2 <- sem(hungary_path2, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+hungary_anova2 <- anova(hungary_fit2, hungary_fit1)
+
+table_hungary[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(hungary_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(hungary_anova2$`Chisq diff`[2], hungary_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_hungary
+
+modindices(hungary_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+hungary_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+hungary_fit3 <- sem(hungary_path3, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+hungary_anova3 <- anova(hungary_fit3, hungary_fit2)
+
+table_hungary[3, ] <- c("Extremism ~ Narcissism", round(fitmeasures(hungary_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(hungary_anova3$`Chisq diff`[2], hungary_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_hungary
+
+modindices(hungary_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+hungary_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+hungary_fit4 <- sem(hungary_path4, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+hungary_anova4 <- anova(hungary_fit4, hungary_fit3)
+
+table_hungary[4, ] <- c("Extremism ~ SDO_T", round(fitmeasures(hungary_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(hungary_anova4$`Chisq diff`[2], hungary_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_hungary
+
+modindices(hungary_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+hungary_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo9*SDO_T + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+hungary_fit5 <- sem(hungary_path5, data = hungary, meanstructure = TRUE)
+#summary(hungary_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+hungary_anova5 <- anova(hungary_fit5, hungary_fit4)
+
+table_hungary[5, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(hungary_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(hungary_anova5$`Chisq diff`[2], hungary_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_hungary
+
+modindices(hungary_fit5, sort. = TRUE)
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+hungary_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo9*SDO_T + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_DIMM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_DIMM
+
+#total effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(346)
+hungary_fitfinal <- sem(hungary_pathfinal, data = hungary, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(hungary_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Jordan
+
+```{r}
+jordan <- drad_complete %>%
+  filter(Residence == 13)
+nrow(jordan)  
+
+jordan_fit1 <- sem(model_nopolat, data = jordan, meanstructure = TRUE)
+#summary(jordan_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_jordan <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_jordan) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_jordan[1, ] <- c("jordan", round(fitmeasures(jordan_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_jordan
+
+modindices(jordan_fit1, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+jordan_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism
+
+#Added paths
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+jordan_fit2 <- sem(jordan_path2, data = jordan, meanstructure = TRUE)
+#summary(jordan_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+jordan_anova2 <- anova(jordan_fit2, jordan_fit1)
+
+table_jordan[2, ] <- c("Extremism ~ Narcissism", round(fitmeasures(jordan_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(jordan_anova2$`Chisq diff`[2], jordan_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_jordan
+
+modindices(jordan_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+jordan_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+jordan_fit3 <- sem(jordan_path3, data = jordan, meanstructure = TRUE)
+#summary(jordan_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+jordan_anova3 <- anova(jordan_fit3, jordan_fit2)
+
+table_jordan[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(jordan_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(jordan_anova3$`Chisq diff`[2], jordan_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_jordan
+
+modindices(jordan_fit3, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ Populism
+
+```{r}
+jordan_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+#RThreat ~ Populism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+jordan_fit4 <- sem(jordan_path4, data = jordan, meanstructure = TRUE)
+#summary(jordan_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+jordan_anova4 <- anova(jordan_fit4, jordan_fit3)
+
+table_jordan[4, ] <- c("RThreat ~ Populism", round(fitmeasures(jordan_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(jordan_anova4$`Chisq diff`[2], jordan_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_jordan
+```
+
+### Boostrapping indirect effects
+
+```{r}
+jordan_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + pop2*Populism
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + n2*Narcissism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ Narcissism
+#Extremism ~ SDO_T
+#RThreat ~ Populism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_POP_RT := sdo7*pop2
+ID_POP_RT := id7*pop2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_NARC + SDO_POP_RT
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_POP_RT
+
+#total effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(475)
+jordan_fitfinal <- sem(jordan_pathfinal, data = jordan, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(jordan_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Poland
+
+```{r}
+poland <- drad_complete %>%
+  filter(Residence == 15)
+nrow(poland)  
+
+poland_fit1 <- sem(model_nopolat, data = poland, meanstructure = TRUE)
+#summary(poland_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_poland <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_poland) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_poland[1, ] <- c("poland", round(fitmeasures(poland_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_poland
+
+modindices(poland_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+poland_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+poland_fit2 <- sem(poland_path2, data = poland, meanstructure = TRUE)
+#summary(poland_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+poland_anova2 <- anova(poland_fit2, poland_fit1)
+
+table_poland[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(poland_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(poland_anova2$`Chisq diff`[2], poland_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_poland
+
+modindices(poland_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+poland_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+poland_fit3 <- sem(poland_path3, data = poland, meanstructure = TRUE)
+#summary(poland_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+poland_anova3 <- anova(poland_fit3, poland_fit2)
+
+table_poland[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(poland_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(poland_anova3$`Chisq diff`[2], poland_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_poland
+
+modindices(poland_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+poland_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+poland_fit4 <- sem(poland_path4, data = poland, meanstructure = TRUE)
+#summary(poland_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+poland_anova4 <- anova(poland_fit4, poland_fit3)
+
+table_poland[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(poland_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(poland_anova4$`Chisq diff`[2], poland_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_poland
+
+modindices(poland_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+poland_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+poland_fit5 <- sem(poland_path5, data = poland, meanstructure = TRUE)
+#summary(poland_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+poland_anova5 <- anova(poland_fit5, poland_fit4)
+
+table_poland[5, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(poland_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(poland_anova5$`Chisq diff`[2], poland_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_poland
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+poland_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_DIMM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_DIMM
+
+#total effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(592)
+poland_fitfinal <- sem(poland_pathfinal, data = poland, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(poland_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Serbia
+
+```{r}
+serbia <- drad_complete %>%
+  filter(Residence == 16)
+nrow(serbia)  
+
+serbia_fit1 <- sem(model_nopolat, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_serbia <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_serbia) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_serbia[1, ] <- c("serbia", round(fitmeasures(serbia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_serbia
+
+modindices(serbia_fit1, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+serbia_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+serbia_fit2 <- sem(serbia_path2, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+serbia_anova2 <- anova(serbia_fit2, serbia_fit1)
+
+table_serbia[2, ] <- c("Extremism ~ SDO_T", round(fitmeasures(serbia_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(serbia_anova2$`Chisq diff`[2], serbia_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_serbia
+
+modindices(serbia_fit2, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+serbia_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T
+
+#Added paths
+#Extremism ~ SDO_T
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+serbia_fit3 <- sem(serbia_path3, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+serbia_anova3 <- anova(serbia_fit3, serbia_fit2)
+
+table_serbia[3, ] <- c("RThreat ~ SDO_T", round(fitmeasures(serbia_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(serbia_anova3$`Chisq diff`[2], serbia_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_serbia
+
+modindices(serbia_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+serbia_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2
+
+#Added paths
+#Extremism ~ SDO_T
+#RThreat ~ SDO_T
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+serbia_fit4 <- sem(serbia_path4, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+serbia_anova4 <- anova(serbia_fit4, serbia_fit3)
+
+table_serbia[4, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(serbia_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(serbia_anova4$`Chisq diff`[2], serbia_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_serbia
+
+modindices(serbia_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+serbia_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2 + n2*Narcissism
+
+#Added paths
+#Extremism ~ SDO_T
+#RThreat ~ SDO_T
+#Extremism ~ Deprivation_2
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+serbia_fit5 <- sem(serbia_path5, data = serbia, meanstructure = TRUE)
+#summary(serbia_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+serbia_anova5 <- anova(serbia_fit5, serbia_fit4)
+
+table_serbia[5, ] <- c("Extremism ~ Narcissism", round(fitmeasures(serbia_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(serbia_anova5$`Chisq diff`[2], serbia_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_serbia
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+serbia_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo9*SDO_T 
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo8*SDO_T + dep2_2*Deprivation_2 + n2*Narcissism
+
+#Added paths
+#Extremism ~ SDO_T
+#RThreat ~ SDO_T
+#Extremism ~ Deprivation_2
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo9*r1
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_DIMM + SDO_NARC
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_DIMM + ID_NARC
+
+#total effects
+SDO_DIR := sdo8
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(166)
+serbia_fitfinal <- sem(serbia_pathfinal, data = serbia, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(serbia_fitfinal, boot.ci.type = "perc")
+
+```
+
+## Slovenia
+
+```{r}
+slovenia <- drad_complete %>%
+  filter(Residence == 17)
+nrow(slovenia)  
+
+slovenia_fit1 <- sem(model_nopolat, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_slovenia <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_slovenia) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_slovenia[1, ] <- c("slovenia", round(fitmeasures(slovenia_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_slovenia
+
+modindices(slovenia_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+slovenia_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+slovenia_fit2 <- sem(slovenia_path2, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+slovenia_anova2 <- anova(slovenia_fit2, slovenia_fit1)
+
+table_slovenia[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(slovenia_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(slovenia_anova2$`Chisq diff`[2], slovenia_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_slovenia
+
+modindices(slovenia_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+slovenia_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+slovenia_fit3 <- sem(slovenia_path3, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+slovenia_anova3 <- anova(slovenia_fit3, slovenia_fit2)
+
+table_slovenia[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(slovenia_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(slovenia_anova3$`Chisq diff`[2], slovenia_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_slovenia
+
+modindices(slovenia_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+slovenia_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+slovenia_fit4 <- sem(slovenia_path4, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+slovenia_anova4 <- anova(slovenia_fit4, slovenia_fit3)
+
+table_slovenia[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(slovenia_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(slovenia_anova4$`Chisq diff`[2], slovenia_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_slovenia
+
+modindices(slovenia_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Deprivation_2
+
+```{r}
+slovenia_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+slovenia_fit5 <- sem(slovenia_path5, data = slovenia, meanstructure = TRUE)
+#summary(slovenia_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+slovenia_anova5 <- anova(slovenia_fit5, slovenia_fit4)
+
+table_slovenia[5, ] <- c("Extremism ~ Deprivation_2", round(fitmeasures(slovenia_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(slovenia_anova5$`Chisq diff`[2], slovenia_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_slovenia
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+slovenia_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model 
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+
+#total INDIRECT effects
+
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_DIMM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_DIMM
+
+#total effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(719)
+slovenia_fitfinal <- sem(slovenia_pathfinal, data = slovenia, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(slovenia_fitfinal, boot.ci.type = "perc")
+
+```
+
+## United Kingdom
+
+```{r}
+uk <- drad_complete %>%
+  filter(Residence == 19)
+nrow(uk)  
+
+uk_fit1 <- sem(model_nopolat, data = uk, meanstructure = TRUE)
+#summary(uk_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_uk <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_uk) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_uk[1, ] <- c("uk", round(fitmeasures(uk_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_uk
+
+modindices(uk_fit1, sort. = TRUE)
+
+```
+
+### Adding RThreat ~ SDO_T
+
+```{r}
+uk_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+uk_fit2 <- sem(uk_path2, data = uk, meanstructure = TRUE)
+#summary(uk_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+uk_anova2 <- anova(uk_fit2, uk_fit1)
+
+table_uk[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(uk_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(uk_anova2$`Chisq diff`[2], uk_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_uk
+
+modindices(uk_fit2, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ SDO_T
+
+```{r}
+uk_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+uk_fit3 <- sem(uk_path3, data = uk, meanstructure = TRUE)
+#summary(uk_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+uk_anova3 <- anova(uk_fit3, uk_fit2)
+
+table_uk[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(uk_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(uk_anova3$`Chisq diff`[2], uk_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_uk
+
+modindices(uk_fit3, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Narcissism
+
+```{r}
+uk_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+uk_fit4 <- sem(uk_path4, data = uk, meanstructure = TRUE)
+#summary(uk_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+uk_anova4 <- anova(uk_fit4, uk_fit3)
+
+table_uk[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(uk_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(uk_anova4$`Chisq diff`[2], uk_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_uk
+
+modindices(uk_fit4, sort. = TRUE)
+
+```
+
+### Adding Extremism ~ Anomie
+
+```{r}
+uk_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + an2*Anomie
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Anomie
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+uk_fit5 <- sem(uk_path5, data = uk, meanstructure = TRUE)
+#summary(uk_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+uk_anova5 <- anova(uk_fit5, uk_fit4)
+
+table_uk[5, ] <- c("Extremism ~ Anomie", round(fitmeasures(uk_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(uk_anova5$`Chisq diff`[2], uk_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_uk
+
+```
+
+### Boostrapping indirect effects
+
+```{r}
+uk_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + an2*Anomie
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Anomie
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_ANOM := sdo2*an2
+ID_ANOM := id2*an2
+
+
+#total INDIRECT effects
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_ANOM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_ANOM
+
+#total effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(102)
+uk_fitfinal <- sem(uk_pathfinal, data = uk, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(uk_fitfinal, boot.ci.type = "perc")
+
+```
+
+# Full dataset (no political attitudes)
+
+```{r}
+nrow(drad_complete)  
+
+drad_complete_fit1 <- sem(model_nopolat, data = drad_complete, meanstructure = TRUE)
+#summary(drad_complete_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+table_drad_complete <- matrix(NA, nrow = 15, ncol = 10)
+colnames(table_drad_complete) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+table_drad_complete[1, ] <- c("drad_complete", round(fitmeasures(drad_complete_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+table_drad_complete
+
+modindices(drad_complete_fit1, sort. = TRUE)
+
+```
+
+## Adding RThreat ~ SDO_T
+
+```{r}
+drad_complete_path2 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Added paths
+#RThreat ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+drad_complete_fit2 <- sem(drad_complete_path2, data = drad_complete, meanstructure = TRUE)
+#summary(drad_complete_fit2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+drad_complete_anova2 <- anova(drad_complete_fit2, drad_complete_fit1)
+
+table_drad_complete[2, ] <- c("RThreat ~ SDO_T", round(fitmeasures(drad_complete_fit2, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(drad_complete_anova2$`Chisq diff`[2], drad_complete_anova2$`Pr(>Chisq)`[2]), 4))
+
+table_drad_complete
+
+modindices(drad_complete_fit2, sort. = TRUE)
+
+```
+
+## Adding Extremism ~ SDO_T
+
+```{r}
+drad_complete_path3 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+drad_complete_fit3 <- sem(drad_complete_path3, data = drad_complete, meanstructure = TRUE)
+#summary(drad_complete_fit3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+drad_complete_anova3 <- anova(drad_complete_fit3, drad_complete_fit2)
+
+table_drad_complete[3, ] <- c("Extremism ~ SDO_T", round(fitmeasures(drad_complete_fit3, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(drad_complete_anova3$`Chisq diff`[2], drad_complete_anova3$`Pr(>Chisq)`[2]), 4))
+
+table_drad_complete
+
+modindices(drad_complete_fit3, sort. = TRUE)
+
+```
+
+## Adding Extremism ~ Narcissism
+
+```{r}
+drad_complete_path4 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+drad_complete_fit4 <- sem(drad_complete_path4, data = drad_complete, meanstructure = TRUE)
+#summary(drad_complete_fit4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+drad_complete_anova4 <- anova(drad_complete_fit4, drad_complete_fit3)
+
+table_drad_complete[4, ] <- c("Extremism ~ Narcissism", round(fitmeasures(drad_complete_fit4, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(drad_complete_anova4$`Chisq diff`[2], drad_complete_anova4$`Pr(>Chisq)`[2]), 4))
+
+table_drad_complete
+
+modindices(drad_complete_fit4, sort. = TRUE)
+
+```
+
+## Adding Extremism ~ Deprivation_2
+
+```{r}
+drad_complete_path5 <- '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+'
+
+drad_complete_fit5 <- sem(drad_complete_path5, data = drad_complete, meanstructure = TRUE)
+#summary(drad_complete_fit5, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+
+drad_complete_anova5 <- anova(drad_complete_fit5, drad_complete_fit4)
+
+table_drad_complete[5, ] <- c("Extremism ~ Narcissism", round(fitmeasures(drad_complete_fit5, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), round(c(drad_complete_anova5$`Chisq diff`[2], drad_complete_anova5$`Pr(>Chisq)`[2]), 4))
+
+table_drad_complete
+
+```
+
+## Bootstrapping indirect effects
+
+```{r}
+drad_complete_pathfinal <-   '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID 
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID 
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID 
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID 
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID 
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID 
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID 
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2 + sdo8*SDO_T
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism + sdo9*SDO_T + n2*Narcissism + dep2_2*Deprivation_2
+
+#Added paths
+#RThreat ~ SDO_T
+#Extremism ~ SDO_T
+#Extremism ~ Narcissism
+#Extremism ~ Deprivation_2
+
+#Covariances
+Narcissism ~~ Anomie + Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Anomie ~~ Deprivation_1 + Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_1 ~~ Deprivation_2 + Cohesion + Alienation + Populism
+Deprivation_2 ~~ Cohesion + Alienation + Populism
+Cohesion ~~ Alienation + Populism
+Alienation ~~ Populism
+
+#HYPOTHESIZED indirect effects via intergroup perceptions and attitudes via RThreat
+SDO_NARC_RT := sdo1*n1*r1
+ID_NARC_RT := id1*n1*r1
+
+SDO_ANOM_RT := sdo2*an1*r1
+ID_ANOM_RT := id2*an1*r1
+
+SDO_DNAT_RT := sdo3*dep1_1*r1
+ID_DNAT_RT := id3*dep1_1*r1
+
+SDO_DIMM_RT := sdo4*dep2_1*r1
+ID_DIMM_RT := id4*dep2_1*r1
+
+#HYPOTHESIZED indirect effects for vulnerability and political engagement mediators
+SDO_COH := sdo5*c1
+ID_COH := id5*c1
+
+SDO_ALN := sdo6*al1
+ID_ALN := id6*al1
+
+SDO_POP := sdo7*pop1
+ID_POP := id7*pop1
+
+#POST HOC indirect effects/not in OG model
+SDO_RT := sdo8*r1
+
+SDO_NARC := sdo1*n2
+ID_NARC := id1*n2
+
+SDO_DIMM := sdo4*dep2_2
+ID_DIMM := id4*dep2_2
+
+#total INDIRECT effects
+SDO_IND := SDO_NARC_RT + SDO_ANOM_RT + SDO_DNAT_RT + SDO_DIMM_RT + SDO_COH + SDO_ALN + SDO_POP + SDO_RT + SDO_NARC + SDO_DIMM
+ID_IND := ID_NARC_RT + ID_ANOM_RT + ID_DNAT_RT + ID_DIMM_RT + ID_COH + ID_ALN + ID_POP + ID_NARC + ID_DIMM
+
+#total effects
+SDO_DIR := sdo9
+SDO_TOT := SDO_IND + SDO_DIR
+
+'
+
+set.seed(484)
+drad_complete_fitfinal <- sem(drad_complete_pathfinal, data = drad_complete, meanstructure = TRUE, se = "bootstrap", bootstrap = 5000)
+parameterEstimates(drad_complete_fitfinal, boot.ci.type = "perc")
+
+```

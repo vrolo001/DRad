@@ -1,0 +1,144 @@
+---
+title: "United Kingdom report"
+author: "Vania Rolon"
+date: "2023-04-17"
+output: html_document
+---
+
+# Setting the workspace
+
+Until we get to the path model, any analyses conducted on one country will repeat on others countries. The code would thus be the same, and the only thing that changes is the dataset used. We could create several datasets called drad_countryname, but then this object would need to be changed across all the code when going from one country to another. A more practical option, is to assign a country's data to the same object (i.e., drad_country) and rerun the code. Each time a new country gets analysed, the only thing that needs to be changed is the *filter by Residence* command when defining drad_country.
+
+```{r}
+library(haven)
+library(tidyverse)
+library(lavaan)
+
+#import .sav data and assigning it to the object drad_complete. The path will vary from user to user, as everyone will have saved the cleaned data in different locations of their devices. Replace this path accordingly
+drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/Last data cleaning/DRad FINAL completed responses 28-02-23.sav")
+nrow(drad_complete)
+any(drad_complete$countNA != 0)
+sum(drad_complete$countNA)
+
+drad_country <- drad_complete %>%
+  filter(Residence == 19) #UK = 19
+
+nrow(drad_country) #n = 317
+
+```
+
+# Membership to organisations
+
+Participants were asked to indicate if they were active (1), inactive(2), or not a member (3) of several organisations. In some countries, some participants had missing values. These will be considered where relevant (i.e., if a country did not have NAs then there will be no NA columns)
+
+```{r}
+drad_orgmemb <- drad_country %>%
+  dplyr::select(c(OrgMember_1:OrgMember_12_TEXT))
+
+sum(is.na(drad_orgmemb)) #12 missing values
+
+org1 <- summary(c(as.factor(drad_orgmemb$OrgMember_1)))
+org2 <- summary(c(as.factor(drad_orgmemb$OrgMember_2)))
+org3 <-summary(c(as.factor(drad_orgmemb$OrgMember_3)))
+org4 <- summary(c(as.factor(drad_orgmemb$OrgMember_4)))
+org5 <- summary(c(as.factor(drad_orgmemb$OrgMember_5)))
+org6 <- summary(c(as.factor(drad_orgmemb$OrgMember_6)))
+org7 <- summary(c(as.factor(drad_orgmemb$OrgMember_7)))
+org8 <- summary(c(as.factor(drad_orgmemb$OrgMember_8)))
+org9 <- summary(c(as.factor(drad_orgmemb$OrgMember_9)))
+org10 <- summary(c(as.factor(drad_orgmemb$OrgMember_10)))
+org11 <- summary(c(as.factor(drad_orgmemb$OrgMember_11)))
+org12 <- summary(c(as.factor(drad_orgmemb$OrgMember_12)))
+
+org_count <- t(cbind(org1, org2, org3, org4, org5, org6, org7, org8, org9, org10, org11, org12))
+rownames(org_count) <- c("Church or religious organization ", "Sport or recreational organization", "Art, music or educational organization", "Labor union", "Political party", "Environmental organization", "Professional association", "Humanitarian or charitable organization", "Consumer organization", "Self-help group or mutual help group", "Women’s group", "Other organization ")
+
+org_count
+
+org_prop <- round(org_count/nrow(drad_orgmemb) * 100, 2) #for proportions
+
+org_table <- cbind(org_count[,1], org_prop[,1],
+      org_count[,2], org_prop[,2],
+      org_count[,3], org_prop[,3],
+      org_count[,4], org_prop[,4])
+colnames(org_table) <- c("n", "%", "n", "%", "n", "%", "n", "%") #where order goes  Active, Inactive, Not a member, and NAs 
+org_table
+
+#write.table(org_table, file = "C:/Users/Vania/Desktop/DRad/data and code/R/DRad/tables/UK org membership.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+```
+
+The UK had one missing value consistently through each of the organization membership items, making it the only other coutry beyond Georgia that had missing values for these questions. The first thought upon having 1NA in every item is that a participant did not complete the survey. However, looking at completion of items that come after membership to organizations, this does not seem to be the case (i.e, there are indeed 317 responses for items like political trust and alienation).
+
+# Political actions in the last 12 months
+
+Participants were asked to report if they had engaged in certain political actions (1 = yes, 2 = no, 3 = don't know) in the last 12 months. In some countries, some participants had missing values. These will be considered where relevant (i.e., if a country did not have NAs then there will be no NA columns).
+
+```{r}
+drad_polact <- drad_country %>%
+  dplyr::select(c(PolAction_1:PolAction_8))
+
+sum(is.na(drad_polact)) #number of missing values
+
+pol1 <- summary(c(as.factor(drad_polact$PolAction_1)))
+pol2 <- summary(c(as.factor(drad_polact$PolAction_2)))
+pol3 <-summary(c(as.factor(drad_polact$PolAction_3)))
+pol4 <- summary(c(as.factor(drad_polact$PolAction_4)))
+pol5 <- summary(c(as.factor(drad_polact$PolAction_5)))
+pol6 <- summary(c(as.factor(drad_polact$PolAction_6)))
+pol7 <- summary(c(as.factor(drad_polact$PolAction_7)))
+pol8 <- summary(c(as.factor(drad_polact$PolAction_8)))
+
+
+polact_count <- t(cbind(pol1, pol2, pol3, pol4, pol5, pol6, pol7, pol8))
+rownames(polact_count) <- c("Contacted a politician or government official", "Worked in a political party or action group", "Worked in another ideological organization", "Displayed a campaign badge/sticker", "Signed a petition", "Took part in a lawful public demonstration", "Boycotted certain products", "Posted or shared anything about politics online")
+
+polact_count
+
+polact_prop <- round(polact_count/nrow(drad_polact) * 100, 2) #for proportions
+polact_prop
+
+polact_table <- cbind(polact_count[,1], polact_prop[,1],
+      polact_count[,2], polact_prop[,2],
+      polact_count[,3], polact_prop[,3])
+colnames(polact_table) <- c("n", "%", "n", "%", "n", "%") 
+polact_table #where the first two columns are for 1's (yes), the next two columns are 2's (no), there are NO 3's, and the last 2 columns are NAs
+
+#write.table(polact_table, file = "C:/Users/Vania/Desktop/DRad/data and code/R/DRad/tables/UK political actions.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+# Path analysis: identification, specification, and modification
+
+```{r}
+# drawing the model
+
+drad_path <-  '
+#Regressions
+Narcissism ~ sdo1*SDO_T + id1*OnlineGroupID + p1*PolAt_1
+Anomie ~ sdo2*SDO_T + id2*OnlineGroupID + p2*PolAt_1
+Deprivation_1 ~ sdo3*SDO_T + id3*OnlineGroupID + p3*PolAt_1
+Deprivation_2 ~ sdo4*SDO_T + id4*OnlineGroupID + p4*PolAt_1
+Cohesion ~ sdo5*SDO_T + id5*OnlineGroupID + p5*PolAt_1
+Alienation ~ sdo6*SDO_T + id6*OnlineGroupID + p6*PolAt_1
+Populism ~ sdo7*SDO_T + id7*OnlineGroupID + p7*PolAt_1
+
+RThreat ~ n1*Narcissism + an1*Anomie + dep1_1*Deprivation_1 + dep2_1*Deprivation_2
+Extremism ~ r1*RThreat + c1*Cohesion + al1*Alienation + pop1*Populism
+
+#Covariances
+Deprivation_1 ~~ Deprivation_2
+
+'
+
+drad_fit1 <- sem(drad_path, data = drad_country, meanstructure = TRUE)
+summary(drad_fit1, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE) 
+
+fit_table <- matrix(NA, nrow = 20, ncol = 10)
+colnames(fit_table) <- c("Model", "chi-statistic", "df", "p-value", "CFI", "TLI", "RMSEA", "SRMR", "ANOVA", "p-value")
+fit_table[1, ] <- c("Original model", round(fitmeasures(drad_fit1, c ("chisq", "df", "pvalue", "cfi", "tli", "rmsea", "srmr")), 4), "-", "-")
+fit_table
+
+modindices(drad_fit1, sort. = TRUE)
+
+```
+

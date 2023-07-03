@@ -1,0 +1,472 @@
+---
+title: "Descriptive Statistics"
+author: "Vania Rolon"
+date: "2023-02-25"
+output: html_document
+---
+```{r}
+library(haven)
+library(tidyverse)
+library(lavaan)
+
+drad_complete <- read_sav("C:/Users/Vania/Desktop/DRad/data and code/Last data cleaning/DRad FINAL completed responses 28-02-23.sav")
+Residence <- drad_complete$Residence
+nrow(drad_complete) #4599
+
+drad_complete %>%
+  group_by(Residence) %>%
+  count() %>%
+  ungroup()
+
+```
+
+A few descriptives of interest are proportion of male and female participants, age, ethnic breakdown, religious breakdown, frequencies of feeling discriminated against, means and SDs in constructs of interest(?) by sex(?), frequencies of belonging to organisations and taking certain political actions. While these are provided by country in the reports sent to collaborators, some descriptives have been computed with the full dataset to get numbers for all countries in one, whereas others were done individually by country. This all depended on whatever was more practical code-wise. Any descriptives not found here can be found in country-specific markdowns
+
+# Typical psych research breakdown (sex, age, ethnicity, religion)
+
+Because ethnicity and gender were open ended, this means that it will be harder to get frequency data, as a German participant could have answered their ethnicity to be "Deutsch", "deutsch", "weiss", "Weiss", etc. The answers will also be in different languages, and so obtaining frequencies by country will be less straightforward. Thus, gender and ethnicity will be computed in their respective markdowns with the path analyses. It will be possible to see all the possible responses by using group_by(variable) %>% count().
+
+## Sex
+
+```{r}
+sex_table <- table(drad_complete$Residence, drad_complete$Sex)
+colnames(sex_table) <- c("Male", "Female", "Other") 
+rownames(sex_table) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK")
+sex_table
+colSums(sex_table)
+prop.table(sex_table, 1)*100
+prop.table(colSums(sex_table))
+
+#write.table(sex_table, file = "sex frequencies by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+## Age
+
+```{r}
+library(mosaic)
+favstats(~ Age, data = drad_complete)
+age_des <- favstats(~ Age, Residence, data = drad_complete)
+mat_ageM <- matrix(round(age_des$mean, 2), nrow = 16, ncol = 1)
+rownames(mat_ageM) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK")
+mat_ageSD <- matrix(round(age_des$sd, 2), nrow = 16, ncol = 1)
+
+mat_age <- cbind(mat_ageM, mat_ageSD)
+colnames(mat_age) <- c("Mean age", "SD")
+age_table <- as.table(mat_age)
+age_table
+
+#write.table(age_table, file = "age mean and SD by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+sex_age_table <- cbind(sex_table, age_table)
+
+#write.table(sex_age_table, file = "sex and age by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+```
+
+## Religion
+
+```{r}
+rel_count <- table(drad_complete$Residence, drad_complete$Religion)
+colnames(rel_count) <- c("Christian", "Jewish", "Muslim", "Buddhist", "Bahá'í", "Hindu", "Sikh", "Other", "Agnostic/Atheist") 
+rownames(rel_count) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK")
+rel_count
+
+rel_prop1 <- round(rel_count[1,]/sum(drad_complete$Residence == 4) *100, 2)
+rel_prop2 <- round(rel_count[2,]/sum(drad_complete$Residence == 5) *100, 2)
+rel_prop3 <- round(rel_count[3,]/sum(drad_complete$Residence == 6) *100, 2)
+rel_prop4 <- round(rel_count[4,]/sum(drad_complete$Residence == 7) *100, 2)
+rel_prop5 <- round(rel_count[5,]/sum(drad_complete$Residence == 8) *100, 2)
+rel_prop6 <- round(rel_count[6,]/sum(drad_complete$Residence == 9) *100, 2)
+rel_prop7 <- round(rel_count[7,]/sum(drad_complete$Residence == 10) *100, 2)
+rel_prop8 <- round(rel_count[8,]/sum(drad_complete$Residence == 11) *100, 2)
+rel_prop9 <- round(rel_count[9,]/sum(drad_complete$Residence == 12) *100, 2)
+rel_prop10 <- round(rel_count[10,]/sum(drad_complete$Residence == 13) *100, 2)
+rel_prop11 <- round(rel_count[11,]/sum(drad_complete$Residence == 14) *100, 2)
+rel_prop12 <- round(rel_count[12,]/sum(drad_complete$Residence == 15) *100, 2)
+rel_prop13 <- round(rel_count[13,]/sum(drad_complete$Residence == 16) *100, 2)
+rel_prop14 <- round(rel_count[14,]/sum(drad_complete$Residence == 17) *100, 2)
+rel_prop15 <- round(rel_count[15,]/sum(drad_complete$Residence == 18) *100, 2)
+rel_prop16 <- round(rel_count[16,]/sum(drad_complete$Residence == 19) *100, 2)
+
+rel_prop <- rbind(rel_prop1, rel_prop2, rel_prop3, rel_prop4, rel_prop5, rel_prop6, rel_prop7, rel_prop8, rel_prop9, rel_prop10, rel_prop11, rel_prop12, rel_prop13, rel_prop14, rel_prop15, rel_prop16)
+
+rel_prop
+
+rel_table <- cbind(rel_count[,1], rel_prop[,1],
+                   rel_count[,2], rel_prop[,2],
+                   rel_count[,3], rel_prop[,3],
+                   rel_count[,4], rel_prop[,4],
+                   rel_count[,5], rel_prop[,5],
+                   rel_count[,6], rel_prop[,6],
+                   rel_count[,7], rel_prop[,7],
+                   rel_count[,8], rel_prop[,8],
+                   rel_count[,9], rel_prop[,9])
+
+colnames(rel_table) <- c("n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%")
+
+#for whole dataset
+table(drad_complete$Religion)
+prop.table(table(drad_complete$Religion))*100
+
+
+#example of how to reformat to obtain by country tables
+
+rel_table_rev <- cbind(t(rel_count)[,1], t(rel_prop)[,1],
+      t(rel_count)[,2], t(rel_prop)[,2],
+      t(rel_count)[,3], t(rel_prop)[,3],
+      t(rel_count)[,4], t(rel_prop)[,4],
+      t(rel_count)[,5], t(rel_prop)[,5],
+      t(rel_count)[,6], t(rel_prop)[,6],
+      t(rel_count)[,7], t(rel_prop)[,7],
+      t(rel_count)[,8], t(rel_prop)[,8],
+      t(rel_count)[,9], t(rel_prop)[,9],
+      t(rel_count)[,10], t(rel_prop)[,10],
+      t(rel_count)[,11], t(rel_prop)[,11],
+      t(rel_count)[,12], t(rel_prop)[,12],
+      t(rel_count)[,13], t(rel_prop)[,13],
+      t(rel_count)[,14], t(rel_prop)[,14],
+      t(rel_count)[,15], t(rel_prop)[,15],
+      t(rel_count)[,16], t(rel_prop)[,16])
+
+colnames(rel_table_rev) <- c("n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%")
+
+#write.table(rel_table, file = "religion by country.txt", sep = ",", quote = FALSE, row.names = TRUE)
+#write.table(rel_table_rev, file = "religion by country TRANSPOSED.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+# Other descriptives
+
+## Feeling of discrimination based on group belongingness
+
+Participants answered if they considered themselves to be a "member of a group that is discriminated against in this country" (discrim_group) and, if they replied yes, then they were allowed to click several grounds on which their group could be discriminated on (e.g., colour or race, nationality, etc.).
+
+- discrim_group: where 1 = Yes, 2 = No, 3 = Don't know
+- for the other discrim_ variables, 1 simply means that a participant selected that option, while  NA  means they did not
+
+It is worthwile to consider the proportion of individuals who felt discriminated against moreso than the number itself, as sample sizes differ by country.
+
+```{r}
+drad_discrim <- drad_complete %>%
+  dplyr::select(c(Residence, discrim_group:discrim_other_TEXT))
+
+discrim_table <- table(drad_discrim$Residence, drad_discrim$discrim_group)
+colnames(discrim_table) <- c("Yes", "No", "Don't know") 
+rownames(discrim_table) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK")
+discrim_table
+colSums(discrim_table)
+colSums(prop.table(discrim_table))*100
+
+discrim_table_prop <- round(prop.table(discrim_table, 1)*100, 2)
+
+#write.table(discrim_table, file = "yes-no felt discriminated by country COUNT.txt", sep = ",", quote = FALSE, row.names = TRUE)
+#write.table(discrim_table_prop, file = "yes-no felt discriminated by country PROPORTION.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+After obtaining the proporiton of people that have felt discriminated against for belonging to any group, it is possible to select only those who answered "yes" and further break them down into the basis for which they felt discriminated against.
+
+Below we created a new data set for each possible group membership that participants could report feeling discriminated for. We selected only participants who reported "yes" and got counts by country. If a country was not shown among these counts, then that meant no participants from that missing country reported feeling discriminated against for belonging to that group. This "0" had to be manually entered, so a new matrix was created where counts were put in a column. At the end, all matrices were combined into one matrix and then converted into a table.
+
+### Discrimnation based on skin colour or race
+
+```{r}
+drad_discrimcolour <- drad_discrim %>%
+  filter(discrim_colour == 1)
+
+colour <- drad_discrimcolour %>%
+  group_by(Residence) %>%
+  count(discrim_colour, .drop = FALSE) 
+
+colour #Residence = 5 (Bosnia) has no participants who felt discriminated on the basis of their colour or race
+
+mat_colour <-  matrix(c(colour$n[1], 0, colour$n[2:15]), nrow = 16, ncol = 1)
+rownames(mat_colour) <- c("Austria", "Bosnia", "Finland", "France", "Georgia", "Germany", "Hungary", "Israel", "Italy", "Jordan", "Kosovo", "Poland", "Serbia", "Slovenia", "Turkey", "UK")
+colnames(mat_colour) <- c("Colour or race")
+```
+### Discrimnation based on nationality
+```{r}
+drad_discrimnational <- drad_discrim %>%
+  filter(discrim_national == 1)
+
+national <- drad_discrimnational %>%
+  group_by(Residence) %>%
+  count(discrim_national, .drop = FALSE)
+
+national #Residence = 8 (5th value), Georgia had count of 0
+
+mat_national <-  matrix(c(national$n[1:4], 0, national$n[5:15]), nrow = 16, ncol = 1)
+colnames(mat_national) <- c("Nationality")
+
+mat_discrim <- cbind(mat_colour, mat_national)
+mat_discrim
+```
+### Discrimnation based on religion
+```{r}
+drad_discrimreligion <- drad_discrim %>%
+  filter(discrim_religion == 1)
+
+religion <- drad_discrimreligion %>%
+  group_by(Residence) %>%
+  count(discrim_religion, .drop = FALSE)
+
+religion #Residence = 8 (5th value), Georgia had count of 0
+
+mat_religion <-  matrix(c(religion$n[1:4], 0, religion$n[5:15]), nrow = 16, ncol = 1)
+colnames(mat_religion) <- c("Religion")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion)
+mat_discrim
+```
+### Discrimnation based on language
+```{r}
+drad_discrimlanguage <- drad_discrim %>%
+  filter(discrim_language == 1)
+
+language <- drad_discrimlanguage %>%
+  group_by(Residence) %>%
+  count(discrim_language, .drop = FALSE)
+
+language #Residence = 8 (5th value), Georgia had count of 0
+
+mat_language <-  matrix(c(language$n[1:4], 0, language$n[5:15]), nrow = 16, ncol = 1)
+colnames(mat_language) <- c("Language")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language)
+mat_discrim
+```
+### Discrimnation based on ethnic group
+```{r}
+drad_discrimethnic <- drad_discrim %>%
+  filter(discrim_ethnic == 1)
+
+ethnic <- drad_discrimethnic %>%
+  group_by(Residence) %>%
+  count(discrim_ethnic, .drop = FALSE)
+
+ethnic #Residence = 8 (5th value), Georgia had count of 0
+
+mat_ethnic <-  matrix(c(ethnic$n[1:4], 0, ethnic$n[5:15]), nrow = 16, ncol = 1)
+colnames(mat_ethnic) <- c("Ethnic group")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic)
+mat_discrim
+```
+### Discrimnation based on age
+```{r}
+drad_discrimage <- drad_discrim %>%
+  filter(discrim_age == 1)
+
+age <- drad_discrimage %>%
+  group_by(Residence) %>%
+  count(discrim_age, .drop = FALSE)
+
+age #No countries with count 0
+
+mat_age <-  matrix(age$n, nrow = 16, ncol = 1)
+colnames(mat_age) <- c("Age")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic, mat_age)
+mat_discrim
+```
+### Discrimnation based on gender
+```{r}
+drad_discrimgender <- drad_discrim %>%
+  filter(discrim_gender == 1)
+
+gender <- drad_discrimgender %>%
+  group_by(Residence) %>%
+  count(discrim_gender, .drop = FALSE)
+
+gender #No countries with count 0
+
+mat_gender <-  matrix(gender$n, nrow = 16, ncol = 1)
+colnames(mat_gender) <- c("Gender")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic, mat_age, mat_gender)
+mat_discrim
+```
+### Discrimnation based on sexuality
+```{r}
+drad_discrimsexuality <- drad_discrim %>%
+  filter(discrim_sexuality == 1)
+
+sexuality <- drad_discrimsexuality %>%
+  group_by(Residence) %>%
+  count(discrim_sexuality, .drop = FALSE)
+
+sexuality #No countries with count 0
+
+mat_sexuality <-  matrix(sexuality$n, nrow = 16, ncol = 1)
+colnames(mat_sexuality) <- c("Sexuality")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic, mat_age, mat_gender, mat_sexuality)
+mat_discrim
+```
+### Discrimnation based on disability
+```{r}
+drad_discrimdisability <- drad_discrim %>%
+  filter(discrim_disability == 1)
+
+disability <- drad_discrimdisability %>%
+  group_by(Residence) %>%
+  count(discrim_disability, .drop = FALSE)
+
+disability #Residence = 13 and 16(Jordan and Serbia, entries 10 and 13) had counts of 0 
+
+mat_disability <-  matrix(c(disability$n[1:9], 0, disability$n[10:11], 0, disability$n[12:14]), nrow = 16, ncol = 1)
+colnames(mat_disability) <- c("Disability")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic, mat_age, mat_gender, mat_sexuality, mat_disability)
+mat_discrim
+```
+### Discrimnation based on Other
+```{r}
+drad_discrimother <- drad_discrim %>%
+  filter(discrim_other == 1)
+
+other <- drad_discrimother %>%
+  group_by(Residence) %>%
+  count(discrim_other, .drop = FALSE)
+
+other #no counts of 0
+
+mat_other <-  matrix(other$n, nrow = 16, ncol = 1)
+colnames(mat_other) <- c("Other")
+
+mat_discrim <- cbind(mat_colour, mat_national, mat_religion, mat_language, mat_ethnic, mat_age, mat_gender, mat_sexuality, mat_disability, mat_other)
+mat_discrim
+
+drad_discrimother %>%
+  group_by(Residence) %>%
+  count(discrim_other_TEXT)
+
+```
+
+Given the variety of "other" reasons, it might be worth getting counts per country for them (just translate them on google, one whole country at once).
+
+### Proportions for all discriminations and binding them into one table
+
+Currently *mat_discrim* only has counts, not proportions. To get these by country, multiple each row by the number of participants that answered "yes" to the previous question about whether they feel they have been discriminated for being a member of a group.
+
+```{r}
+discrim_table #table of frequencies for participants reporting being members of a group that is discriminated against
+mat_discrim #table of discriminated groups participants could select they belong to
+
+#multiple each row in mat_discrim by the value in the first column of discrim_table (e.g., 13*64/100; 12*64/100) to get proportions
+
+discrim_table_reasons <- as.table(mat_discrim)
+colSums(discrim_table_reasons)
+prop.table(colSums(discrim_table_reasons))*100
+
+discrim_table_reasons_prop <- as.table(round((mat_discrim/discrim_table[,1])*100, 2))
+
+
+#write.table(discrim_table_reasons, file = "group discrimination by country COUNT.txt", sep = ",", quote = FALSE, row.names = TRUE)
+#write.table(discrim_table_reasons_prop, file = "group discrimination by country PROP.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+#example of how to reformat to obtain by country tables
+
+discrim_table_reasons
+discrim_table_reasons_prop
+
+discrim_table_rev <- cbind(t(discrim_table_reasons)[,1], t(discrim_table_reasons_prop)[,1],
+      t(discrim_table_reasons)[,2], t(discrim_table_reasons_prop)[,2],
+      t(discrim_table_reasons)[,3], t(discrim_table_reasons_prop)[,3],
+      t(discrim_table_reasons)[,4], t(discrim_table_reasons_prop)[,4],
+      t(discrim_table_reasons)[,5], t(discrim_table_reasons_prop)[,5],
+      t(discrim_table_reasons)[,6], t(discrim_table_reasons_prop)[,6],
+      t(discrim_table_reasons)[,7], t(discrim_table_reasons_prop)[,7],
+      t(discrim_table_reasons)[,8], t(discrim_table_reasons_prop)[,8],
+      t(discrim_table_reasons)[,9], t(discrim_table_reasons_prop)[,9],
+      t(discrim_table_reasons)[,10], t(discrim_table_reasons_prop)[,10],
+      t(discrim_table_reasons)[,11], t(discrim_table_reasons_prop)[,11],
+      t(discrim_table_reasons)[,12], t(discrim_table_reasons_prop)[,12],
+      t(discrim_table_reasons)[,13], t(discrim_table_reasons_prop)[,13],
+      t(discrim_table_reasons)[,14], t(discrim_table_reasons_prop)[,14],
+      t(discrim_table_reasons)[,15], t(discrim_table_reasons_prop)[,15],
+      t(discrim_table_reasons)[,16], t(discrim_table_reasons_prop)[,16])
+
+colnames(discrim_table_rev) <- c("n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%", "n", "%")
+
+#write.table(discrim_table_rev, file = "group discrimination by country TRANSPOSED.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+```
+
+## Membership to organizations
+
+Participants were asked to indicate if they were active (1), inactive(2), or not a member (3) of several organisations. In some countries, some participants had missing values.
+
+```{r}
+drad_orgmemb <- drad_complete %>%
+  dplyr::select(c(OrgMember_1:OrgMember_12_TEXT))
+
+sum(is.na(drad_orgmemb)) #40 missing values
+
+org1 <- summary(c(as.factor(drad_orgmemb$OrgMember_1)))
+org2 <- summary(c(as.factor(drad_orgmemb$OrgMember_2)))
+org3 <-summary(c(as.factor(drad_orgmemb$OrgMember_3)))
+org4 <- summary(c(as.factor(drad_orgmemb$OrgMember_4)))
+org5 <- summary(c(as.factor(drad_orgmemb$OrgMember_5)))
+org6 <- summary(c(as.factor(drad_orgmemb$OrgMember_6)))
+org7 <- summary(c(as.factor(drad_orgmemb$OrgMember_7)))
+org8 <- summary(c(as.factor(drad_orgmemb$OrgMember_8)))
+org9 <- summary(c(as.factor(drad_orgmemb$OrgMember_9)))
+org10 <- summary(c(as.factor(drad_orgmemb$OrgMember_10)))
+org11 <- summary(c(as.factor(drad_orgmemb$OrgMember_11)))
+org12 <- summary(c(as.factor(drad_orgmemb$OrgMember_12)))
+
+org_count <- t(cbind(org1, org2, org3, org4, org5, org6, org7, org8, org9, org10, org11, org12))
+rownames(org_count) <- c("Church or religious organization ", "Sport or recreational organization", "Art, music or educational organization", "Labor union", "Political party", "Environmental organization", "Professional association", "Humanitarian or charitable organization", "Consumer organization", "Self-help group or mutual help group", "Women’s group", "Other organization ")
+
+org_count
+
+org_prop <- round(org_count/nrow(drad_orgmemb) * 100, 2) #for proportions
+
+org_table <- cbind(org_count[,1], org_prop[,1],
+      org_count[,2], org_prop[,2],
+      org_count[,3], org_prop[,3],
+      org_count[,4], org_prop[,4])
+colnames(org_table) <- c("n", "%", "n", "%", "n", "%", "n", "%") 
+org_table
+
+#write.table(org_table, file = "DRad full data org membership.txt", sep = ",", quote = FALSE, row.names = TRUE)
+
+```
+
+## Political actions in the last 12 months
+
+Participants were asked to report if they had engaged in certain political actions (1 = yes, 2 = no, 3 = don't know) in the last 12 months. In some countries, some participants had missing values. Answers of "don't know" are ex
+
+```{r}
+drad_polact <- drad_complete %>%
+  dplyr::select(c(PolAction_1:PolAction_8))
+
+sum(is.na(drad_polact)) #number of missing values
+
+pol1 <- summary(c(as.factor(drad_polact$PolAction_1)))
+pol2 <- summary(c(as.factor(drad_polact$PolAction_2)))
+pol3 <-summary(c(as.factor(drad_polact$PolAction_3)))
+pol4 <- summary(c(as.factor(drad_polact$PolAction_4)))
+pol5 <- summary(c(as.factor(drad_polact$PolAction_5)))
+pol6 <- summary(c(as.factor(drad_polact$PolAction_6)))
+pol7 <- summary(c(as.factor(drad_polact$PolAction_7)))
+pol8 <- summary(c(as.factor(drad_polact$PolAction_8)))
+
+
+polact_count <- t(cbind(pol1, pol2, pol3, pol4, pol5, pol6, pol7, pol8))
+rownames(polact_count) <- c("Contacted a politician or government official", "Worked in a political party or action group", "Worked in another ideological organization", "Displayed a campaign badge/sticker", "Signed a petition", "Took part in a lawful public demonstration", "Boycotted certain products", "Posted or shared anything about politics online")
+
+polact_count
+
+polact_prop <- round(polact_count/nrow(drad_polact) * 100, 2) #for proportions
+polact_prop
+
+polact_table <- cbind(polact_count[,1], polact_prop[,1],
+      polact_count[,2], polact_prop[,2],
+      polact_count[,3], polact_prop[,3])
+colnames(polact_table) <- c("n", "%", "n", "%", "n", "%") 
+polact_table #where the firs two columns are for 1's (yes), the next two columns are 2's (no), there are NO 3's, and the last 2 columns are NAs
+
+#write.table(polact_table, file = "DRad full data political actions.txt", sep = ",", quote = FALSE, row.names = TRUE)
+```
+
+
